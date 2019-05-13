@@ -14,4 +14,7 @@ type Goods struct {
 	GoodsStatus     uint8  `json:"goods_status"`
 	IsDelete        uint8  `json:"is_delete"`
 	WxappId         uint   `json:"wxapp_id"`
+	GoodsSpec       []GoodsSpec
+	Category        Category       `gorm:"foreignkey:CategoryId"`
+	GoodsSpecRel    []GoodsSpecRel `gorm:"foreignkey:GoodsId"`
 }
