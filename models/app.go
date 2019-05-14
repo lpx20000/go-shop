@@ -17,12 +17,11 @@ type Wxapp struct {
 	Navbar         WxappNavbar `gorm:"foreignkey:WxappId" json:"navbar"`
 }
 
-func GetAppBase(appId uint) (app Wxapp) {
-	db.Select("wxapp_id, is_service, service_image_id, is_phone, phone_no, phone_image_id").
+func GetAppBase(appId uint) (app Wxapp, err error) {
+	err = db.Select("wxapp_id, is_service, service_image_id, is_phone, phone_no, phone_image_id").
 		Where(&Wxapp{WxappId: appId}).
-		Find(&app)
-	db.Model(&app).Select("wxapp_title, top_text_color, top_background_color").
-		Related(&app.Navbar, "Navbar")
+		Preload("Navbar").
+		First(&app).Error
 	return
 }
 

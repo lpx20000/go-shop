@@ -9,6 +9,6 @@ type GoodsSpec struct {
 	StockNum    uint    `json:"stock_num"`
 	GoodsSales  uint    `json:"goods_sales"`
 	GoodsWeight float64 `json:"goods_weight"`
-	WxappId     uint    `json:"wxapp_id"`
-	SpecSkuId   uint    `json:"spec_sku_id"`
+	WxappId     uint    `json:"_"`
+	SpecSkuId   string  `json:"spec_sku_id"`
 }

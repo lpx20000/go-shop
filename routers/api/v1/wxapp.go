@@ -1,10 +1,11 @@
 package v1
 
 import (
-	"github.com/gin-gonic/gin"
 	"shop/models"
 	"shop/pkg/e"
 	"shop/pkg/util"
+
+	"github.com/gin-gonic/gin"
 )
 
 type AppRequest struct {
@@ -20,7 +21,12 @@ func GetAppBase(c *gin.Context) {
 		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: data})
 		return
 	}
-
-	data["wxapp"] = models.GetAppBase(app.WxappID)
-	util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+	var err error
+	if info, err := models.GetAppBase(app.WxappID); err == nil {
+		data["wxapp"] = info
+		util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+		return
+	}
+	data["wxapp"] = err
+	util.Response(c, util.R{Code: e.ERROR, Data: data})
 }

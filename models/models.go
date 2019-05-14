@@ -9,11 +9,18 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-var db *gorm.DB
+var (
+	db       *gorm.DB
+	HostInfo Info
+)
 
 type Model struct {
 	CreateTime int `json:"create_time"`
 	UpdateTime int `json:"update_time"`
+}
+
+type Info struct {
+	Host string
 }
 
 func init() {
@@ -59,6 +66,10 @@ func init() {
 	db.SingularTable(true)
 	db.DB().SetMaxIdleConns(10)
 	db.DB().SetMaxOpenConns(100)
+}
+
+func SetInfo(host string) {
+	HostInfo.Host = host
 }
 
 func CloseDB() {
