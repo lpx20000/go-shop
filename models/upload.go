@@ -1,6 +1,8 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type UploadFile struct {
 	FileId    uint   `json:"file_id"`

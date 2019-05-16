@@ -2,7 +2,15 @@ package models
 
 import "time"
 
+type Categories []Category
+type CategoriesWithChild []CategoryWithChild
+
 type Category struct {
+	CategoryList
+	Image UploadFile `gorm:"foreignkey:ImageId;association_foreignkey:FileId" json:"image" `
+}
+
+type CategoryList struct {
 	CategoryId       uint   `json:"category_id"`
 	Name             string `json:"name"`
 	ParentId         uint   `json:"parent_id"`
@@ -13,7 +21,43 @@ type Category struct {
 	CreateTimeString string `json:"create_time"`
 }
 
+type CategoryWithChild struct {
+	Category
+	Child []Category `json:"child"`
+}
+
 func (c *Category) AfterFind() error {
 	c.CreateTimeString = time.Unix(c.CreateTime, 0).Format("2006-01-02 15:04:05")
 	return nil
+}
+
+func (c Categories) Len() int {
+	return len(c)
+}
+
+func (c Categories) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+func (c Categories) Less(i, j int) bool {
+	return c[i].Sort < c[j].Sort
+}
+
+func (c CategoriesWithChild) Len() int {
+	return len(c)
+}
+
+func (c CategoriesWithChild) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+func (c CategoriesWithChild) Less(i, j int) bool {
+	return c[i].Sort < c[j].Sort
+}
+
+func GetCategory() (category []Category, err error) {
+	err = db.Preload("Image").
+		Order("sort ASC").
+		Find(&category).Error
+	return
 }

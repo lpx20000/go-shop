@@ -22,6 +22,8 @@ func InitRouter() *gin.Engine {
 		apia1.GET("/app", v1.GetAppBase)
 		apia1.GET("/index", v1.GetAppInfo)
 		apia1.GET("/detail", v1.GetGoodDetail)
+		apia1.GET("/category", v1.GetGoodCategory)
+		apia1.GET("/list", v1.GetGoodList)
 	}
 
 	return r
