@@ -8,8 +8,8 @@ type Category struct {
 	ParentId         uint   `json:"parent_id"`
 	ImageId          uint   `json:"image_id"`
 	Sort             uint8  `json:"sort"`
-	WxappId          uint   `json:"_"`
-	CreateTime       int64  `json:"_"`
+	WxappId          uint   `json:"-"`
+	CreateTime       int64  `json:"-"`
 	CreateTimeString string `json:"create_time"`
 }
 

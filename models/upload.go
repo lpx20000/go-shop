@@ -12,7 +12,7 @@ type UploadFile struct {
 	FileType  string `json:"file_type"`
 	Extension string `json:"extension"`
 	FilePath  string `json:"file_path"`
-	WxapId    uint   `json:"_"`
+	WxapId    uint   `json:"-"`
 }
 
 func (upload *UploadFile) AfterFind() error {

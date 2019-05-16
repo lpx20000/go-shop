@@ -21,6 +21,7 @@ func InitRouter() *gin.Engine {
 		//基本信息
 		apia1.GET("/app", v1.GetAppBase)
 		apia1.GET("/index", v1.GetAppInfo)
+		apia1.GET("/detail", v1.GetGoodDetail)
 	}
 
 	return r

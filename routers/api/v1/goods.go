@@ -1,16 +1,34 @@
 package v1
 
-type Goods struct {
-	GoodsId         uint   `json:"goods_id"`
-	GoodsName       string `json:"goods_name"`
-	CategoryId      uint   `json:"category_id"`
-	SpecType        int    `json:"spec_type"`
-	DeductStockType int    `json:"deduct_stock_type"`
-	Content         string `json:"content"`
-	SalesInitial    int    `json:"_"`
-	SalesActual     int    `json:"_"`
-	GoodsSort       int    `json:"goods_sort"`
-	DeliveryId      int    `json:"delivery_id"`
-	GoodsStatus     int    `json:"goods_status"`
-	WxappId         uint   `json:"_"`
+import (
+	"shop/models"
+	"shop/pkg/e"
+	"shop/pkg/util"
+
+	"github.com/gin-gonic/gin"
+)
+
+type Detail struct {
+	GoodId uint `form:"good_id" binding:"required"`
+}
+
+func GetGoodDetail(c *gin.Context) {
+	var detail Detail
+	data := make(map[string]interface{})
+
+	if c.ShouldBindQuery(&detail) != nil {
+		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: data})
+		return
+	}
+	var err error
+
+	if info, err := models.GetGoodDetail(detail.GoodId); err == nil {
+		data["detail"] = info
+		//info.SpecRel = models.GetGoodsSpecRefer(info.GoodsId)
+		data["specData"] = info.GetManySpecData()
+		util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+		return
+	}
+	data["detail"] = err
+	util.Response(c, util.R{Code: e.ERROR, Data: data})
 }

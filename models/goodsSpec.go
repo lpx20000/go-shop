@@ -9,6 +9,10 @@ type GoodsSpec struct {
 	StockNum    uint    `json:"stock_num"`
 	GoodsSales  uint    `json:"goods_sales"`
 	GoodsWeight float64 `json:"goods_weight"`
-	WxappId     uint    `json:"_"`
+	WxappId     uint    `json:"-"`
 	SpecSkuId   string  `json:"spec_sku_id"`
+}
+
+func GetManySpecData() {
+
 }

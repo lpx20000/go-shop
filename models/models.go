@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"shop/pkg/setting"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -64,7 +65,8 @@ func init() {
 
 	db.LogMode(logMode)
 	db.SingularTable(true)
-	db.DB().SetMaxIdleConns(10)
+	db.DB().SetMaxIdleConns(0)
+	db.DB().SetConnMaxLifetime(time.Second)
 	db.DB().SetMaxOpenConns(100)
 }
 
