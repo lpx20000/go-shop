@@ -1,13 +1,13 @@
 package models
 
 type Delivery struct {
-	DeliveryId  uint                   `json:"delivery_id"`
-	Name        string                 `json:"name"`
+	DeliveryId  uint                   `json:"delivery_id,omitempty"`
+	Name        string                 `json:"name,omitempty"`
 	Method      uint                   `json:"-"`
-	MethodSlice map[string]interface{} `json:"method"`
-	Sort        uint8                  `json:"sort"`
+	MethodSlice map[string]interface{} `json:"method,omitempty"`
+	Sort        uint8                  `json:"sort,omitempty"`
 	WxappId     uint                   `json:"-"`
-	Rule        []DeliveryRule         `gorm:"foreignkey:DeliveryId;association_foreignkey:DeliveryId" json:"rule" `
+	Rule        []DeliveryRule         `gorm:"foreignkey:DeliveryId;association_foreignkey:DeliveryId" json:"rule,omitempty" `
 }
 
 func (d *Delivery) AfterFind() error {

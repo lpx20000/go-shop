@@ -1,24 +1,22 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Categories []Category
 type CategoriesWithChild []CategoryWithChild
 
 type Category struct {
-	CategoryList
-	Image UploadFile `gorm:"foreignkey:ImageId;association_foreignkey:FileId" json:"image" `
-}
-
-type CategoryList struct {
-	CategoryId       uint   `json:"category_id"`
-	Name             string `json:"name"`
-	ParentId         uint   `json:"parent_id"`
-	ImageId          uint   `json:"image_id"`
-	Sort             uint8  `json:"sort"`
-	WxappId          uint   `json:"-"`
-	CreateTime       int64  `json:"-"`
-	CreateTimeString string `json:"create_time"`
+	CategoryId       uint       `json:"category_id"`
+	Name             string     `json:"name"`
+	ParentId         uint       `json:"parent_id"`
+	ImageId          uint       `json:"image_id"`
+	Sort             uint8      `json:"sort"`
+	WxappId          uint       `json:"-"`
+	CreateTime       int64      `json:"-"`
+	CreateTimeString string     `json:"create_time"`
+	Image            UploadFile `gorm:"foreignkey:ImageId;association_foreignkey:FileId" json:"image,omitempty" `
 }
 
 type CategoryWithChild struct {

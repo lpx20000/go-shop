@@ -4,6 +4,11 @@ import (
 	"shop/pkg/setting"
 	v1 "shop/routers/api/v1"
 
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
+
+	_ "shop/docs"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,6 +18,7 @@ func InitRouter() *gin.Engine {
 	r.Use(gin.Logger())
 
 	r.Use(gin.Recovery())
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	gin.SetMode(setting.RunMode)
 

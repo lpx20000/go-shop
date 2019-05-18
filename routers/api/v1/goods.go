@@ -13,7 +13,7 @@ type Detail struct {
 }
 
 type List struct {
-	Page       uint   `form:"page"`
+	Page       int    `form:"page"`
 	SortType   string `form:"sortType" binding:"required"`
 	SortPrice  int    `form:"sortPrice"`
 	CategoryId uint   `form:"category_id" binding:"required"`
@@ -42,21 +42,32 @@ func GetGoodDetail(c *gin.Context) {
 }
 
 func GetGoodList(c *gin.Context) {
-	var list List
+	var (
+		list List
+		err  error
+		page int
+	)
 	data := make(map[string]interface{})
 	if err := c.ShouldBindQuery(&list); err != nil {
 		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: err})
 		return
 	}
-	var err error
+
 	models.SetInfo(c.Request.Host)
-	info, err := models.GetGoodsList(list.Page,
+
+	page = 1
+
+	if list.Page > 1 {
+		page = list.Page
+	}
+
+	info, err := models.GetGoodsList(page,
 		list.CategoryId, list.Search, list.SortType, list.SortPrice)
 	if err == nil {
 		data["list"] = info
 		util.Response(c, util.R{Code: e.SUCCESS, Data: data})
 		return
 	}
-	data["list"] = err
+	data["list"] = err.Error()
 	util.Response(c, util.R{Code: e.ERROR, Data: data})
 }
