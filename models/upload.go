@@ -14,7 +14,7 @@ type UploadFile struct {
 	FileType  string `json:"file_type,omitempty"`
 	Extension string `json:"extension,omitempty"`
 	FilePath  string `json:"file_path,omitempty"`
-	WxapId    uint   `json:"-"`
+	WxapId    uint   `json:"-,omitempty"`
 }
 
 func (upload *UploadFile) AfterFind() error {

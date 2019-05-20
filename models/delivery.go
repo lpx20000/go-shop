@@ -11,7 +11,7 @@ type Delivery struct {
 }
 
 func (d *Delivery) AfterFind() error {
-	db.Model(&d).Related(&d.Rule, "Rule")
+	Db.Model(&d).Related(&d.Rule, "Rule")
 	goodsStatus := map[uint]map[string]interface{}{
 		10: {"text": "按件数", "value": 10},
 		20: {"text": "'按重量", "value": 20},

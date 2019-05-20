@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	db       *gorm.DB
+	Db       *gorm.DB
 	HostInfo Info
 )
 
@@ -49,7 +49,7 @@ func init() {
 	tablePrefix = sec.Key("TABLE_PREFIX").String()
 	logMode, _ = sec.Key("LOG_MODE").Bool()
 
-	db, err = gorm.Open(dbType, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
+	Db, err = gorm.Open(dbType, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		user,
 		password,
 		host,
@@ -63,11 +63,11 @@ func init() {
 		return tablePrefix + defaultTableName
 	}
 
-	db.LogMode(logMode)
-	db.SingularTable(true)
-	db.DB().SetMaxIdleConns(0)
-	db.DB().SetConnMaxLifetime(time.Second)
-	db.DB().SetMaxOpenConns(100)
+	Db.LogMode(logMode)
+	Db.SingularTable(true)
+	Db.DB().SetMaxIdleConns(0)
+	Db.DB().SetConnMaxLifetime(time.Second)
+	Db.DB().SetMaxOpenConns(100)
 }
 
 func SetInfo(host string) {
@@ -75,5 +75,5 @@ func SetInfo(host string) {
 }
 
 func CloseDB() {
-	defer db.Close()
+	defer Db.Close()
 }

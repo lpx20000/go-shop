@@ -4,6 +4,7 @@ import (
 	"shop/models"
 	"shop/pkg/e"
 	"shop/pkg/util"
+	"shop/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,6 +21,13 @@ type List struct {
 	Search     string `form:"search"`
 }
 
+// @Summary 获取小程序商品详情
+// @Produce  json
+// @Param wxapp_id query string true "WxappID"
+// @Param good_id query string true "GoodId"
+// @Success 200 {string} json "{"code":200,"data":{},"msg":"success"}"
+// @Success 500 {string} json "{"code":500,"data":{},"msg":"We need ID!"}"
+// @Router /api/v1/detail?wxapp_id={id} [get]
 func GetGoodDetail(c *gin.Context) {
 	var detail Detail
 	data := make(map[string]interface{})
@@ -30,9 +38,9 @@ func GetGoodDetail(c *gin.Context) {
 	}
 	var err error
 
-	if info, err := models.GetGoodDetail(detail.GoodId); err == nil {
+	if info, err := services.GetGoodDetail(detail.GoodId); err == nil {
 		data["detail"] = info
-		info.SpecRel = models.GetGoodsSpecRel(info.GoodsId)
+		info.SpecRel = services.GetGoodsSpecRel(info.GoodsId)
 		data["specData"] = info.GetManySpecData()
 		util.Response(c, util.R{Code: e.SUCCESS, Data: data})
 		return
@@ -41,6 +49,17 @@ func GetGoodDetail(c *gin.Context) {
 	util.Response(c, util.R{Code: e.ERROR, Data: data})
 }
 
+// @Summary 获取小程序商品分类
+// @Produce  json
+// @Param wxapp_id query string true "WxappID"
+// @Param page query string true "Page"
+// @Param sortType query string true "SortType"
+// @Param sortPrice query string true "SortPrice"
+// @Param category_id query string true "CategoryId"
+// @Param search query string false "Search"
+// @Success 200 {string} json "{"code":200,"data":{},"msg":"success"}"
+// @Success 500 {string} json "{"code":500,"data":{},"msg":"We need ID!"}"
+// @Router /api/v1/list?wxapp_id={id} [get]
 func GetGoodList(c *gin.Context) {
 	var (
 		list List
@@ -61,7 +80,7 @@ func GetGoodList(c *gin.Context) {
 		page = list.Page
 	}
 
-	info, err := models.GetGoodsList(page,
+	info, err := services.GetGoodsList(page,
 		list.CategoryId, list.Search, list.SortType, list.SortPrice)
 	if err == nil {
 		data["list"] = info

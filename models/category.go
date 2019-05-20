@@ -52,10 +52,3 @@ func (c CategoriesWithChild) Swap(i, j int) {
 func (c CategoriesWithChild) Less(i, j int) bool {
 	return c[i].Sort < c[j].Sort
 }
-
-func GetCategory() (category []Category, err error) {
-	err = db.Preload("Image").
-		Order("sort ASC").
-		Find(&category).Error
-	return
-}
