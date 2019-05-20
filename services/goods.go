@@ -75,20 +75,20 @@ func GetGoodsList(page int,
 			Order("goods_id DESC")
 	case "sales":
 		query = query.Order("goods_sales DESC")
+	case "price":
+		order := "goods_min_price DESC"
+
+		if sortPrice > 0 {
+			order = "goods_max_price DESC "
+		}
+
+		query = query.Order(order)
 	}
 
 	query.Count(&total)
 	data = make(map[string]interface{})
 
 	err = query.Offset(models.PER_PAGE * (page - 1)).Limit(models.PER_PAGE).Find(&goods).Error
-	//if err == nil {
-	//	goodsJson, _ := json.Marshal(goods)
-	//	a := string(goodsJson)
-	//
-	//	fmt.Println(a)
-	//
-	//	_ = json.Unmarshal(goodsJson, &goodsList)
-	//}
 
 	data["total"] = total
 	data["per_page"] = models.PER_PAGE

@@ -1,0 +1,142 @@
+basePath: '{{.BasePath}}'
+host: '{{.Host}}'
+info:
+  contact: {}
+  description: An example of gin
+  license:
+    name: MIT
+    url: https://github.com/EDDYCJY/go-gin-example/blob/master/LICENSE
+  termsOfService: https://github.com/EDDYCJY/go-gin-example
+  title: Golang Gin API
+  version: "1.0"
+paths:
+  /api/v1/app:
+    get:
+      parameters:
+      - description: WxappID
+        in: query
+        name: wxapp_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"code":200,"data":{},"msg":"success"}'
+          schema:
+            type: string
+        "500":
+          description: '{"code":500,"data":{},"msg":"We need ID!"}'
+          schema:
+            type: string
+      summary: 获取小程序基本信息
+  /api/v1/category:
+    get:
+      parameters:
+      - description: WxappID
+        in: query
+        name: wxapp_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"code":200,"data":{},"msg":"success"}'
+          schema:
+            type: string
+        "500":
+          description: '{"code":500,"data":{},"msg":"We need ID!"}'
+          schema:
+            type: string
+      summary: 获取小程序商品分类详情
+  /api/v1/detail:
+    get:
+      parameters:
+      - description: WxappID
+        in: query
+        name: wxapp_id
+        required: true
+        type: string
+      - description: GoodId
+        in: query
+        name: good_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"code":200,"data":{},"msg":"success"}'
+          schema:
+            type: string
+        "500":
+          description: '{"code":500,"data":{},"msg":"We need ID!"}'
+          schema:
+            type: string
+      summary: 获取小程序商品详情
+  /api/v1/index:
+    get:
+      parameters:
+      - description: WxappID
+        in: query
+        name: wxapp_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"code":200,"data":{},"msg":"success"}'
+          schema:
+            type: string
+        "500":
+          description: '{"code":500,"data":{},"msg":"We need ID!"}'
+          schema:
+            type: string
+      summary: 获取小程序首页信息
+  /api/v1/list:
+    get:
+      parameters:
+      - description: WxappID
+        in: query
+        name: wxapp_id
+        required: true
+        type: string
+      - description: Page
+        in: query
+        name: page
+        required: true
+        type: string
+      - description: SortType
+        in: query
+        name: sortType
+        required: true
+        type: string
+      - description: SortPrice
+        in: query
+        name: sortPrice
+        required: true
+        type: string
+      - description: CategoryId
+        in: query
+        name: category_id
+        required: true
+        type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"code":200,"data":{},"msg":"success"}'
+          schema:
+            type: string
+        "500":
+          description: '{"code":500,"data":{},"msg":"We need ID!"}'
+          schema:
+            type: string
+      summary: 获取小程序商品分类
+swagger: "2.0"

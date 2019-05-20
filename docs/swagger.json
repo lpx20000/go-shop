@@ -1,0 +1,214 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "An example of gin",
+        "title": "Golang Gin API",
+        "termsOfService": "https://github.com/EDDYCJY/go-gin-example",
+        "contact": {},
+        "license": {
+            "name": "MIT",
+            "url": "https://github.com/EDDYCJY/go-gin-example/blob/master/LICENSE"
+        },
+        "version": "1.0"
+    },
+    "host": "{{.Host}}",
+    "basePath": "{{.BasePath}}",
+    "paths": {
+        "/api/v1/app": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取小程序基本信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "WxappID",
+                        "name": "wxapp_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"code\":200,\"data\":{},\"msg\":\"success\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "{\"code\":500,\"data\":{},\"msg\":\"We need ID!\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/category": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取小程序商品分类详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "WxappID",
+                        "name": "wxapp_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"code\":200,\"data\":{},\"msg\":\"success\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "{\"code\":500,\"data\":{},\"msg\":\"We need ID!\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/detail": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取小程序商品详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "WxappID",
+                        "name": "wxapp_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "GoodId",
+                        "name": "good_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"code\":200,\"data\":{},\"msg\":\"success\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "{\"code\":500,\"data\":{},\"msg\":\"We need ID!\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/index": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取小程序首页信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "WxappID",
+                        "name": "wxapp_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"code\":200,\"data\":{},\"msg\":\"success\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "{\"code\":500,\"data\":{},\"msg\":\"We need ID!\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/list": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取小程序商品分类",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "WxappID",
+                        "name": "wxapp_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "SortType",
+                        "name": "sortType",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "SortPrice",
+                        "name": "sortPrice",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "CategoryId",
+                        "name": "category_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"code\":200,\"data\":{},\"msg\":\"success\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "{\"code\":500,\"data\":{},\"msg\":\"We need ID!\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
