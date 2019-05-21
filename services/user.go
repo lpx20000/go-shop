@@ -32,7 +32,7 @@ type registerUser struct {
 
 type sessionInfo struct {
 	SessionKey string `json:"session_key"`
-	Openid     string `json:"errmsg"`
+	Openid     string `json:"openid"`
 }
 
 type errorInfo struct {
@@ -56,6 +56,7 @@ func UserLogin(userInfo, code string, wxappId uint) (session string, err error) 
 		return
 	}
 	if session, openId, err = getSessionFromWeiChat(code, appInfo.AppId, appInfo.AppSecret); err != nil {
+		log.Println(err)
 		return
 	}
 	register(userInfo, wxappId, openId)
