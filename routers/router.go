@@ -25,6 +25,7 @@ func InitRouter() *gin.Engine {
 	apia1 := r.Group("/api/v1")
 	{
 		//基本信息
+		apia1.POST("/login", v1.UserLogin)
 		apia1.GET("/app", v1.GetAppBase)
 		apia1.GET("/index", v1.GetAppInfo)
 		apia1.GET("/detail", v1.GetGoodDetail)
