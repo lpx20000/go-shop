@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"encoding/json"
-	"fmt"
 	"shop/pkg/e"
 	"shop/pkg/util"
 	"shop/services"
@@ -24,9 +22,10 @@ type User struct {
 
 func UserLogin(c *gin.Context) {
 	var (
-		user     User
-		userInfo services.UserInfo
-		err      error
+		user   User
+		userId uint
+		token  string
+		err    error
 	)
 	data := make(map[string]interface{})
 	if err = c.ShouldBindWith(&user, binding.FormPost); err != nil {
@@ -34,11 +33,11 @@ func UserLogin(c *gin.Context) {
 		return
 	}
 
-	_, err = services.UserLogin(user.UserInfo, user.Code, user.WxappId)
+	token, userId, err = services.UserLogin(user.UserInfo, user.Code, user.WxappId)
 
-	_ = json.Unmarshal([]byte(user.UserInfo), &userInfo)
-	//data["user"] = user
-	data["info"] = err
-	fmt.Println(err)
+	data["token"] = token
+	data["user_id"] = userId
+	data["err"] = err
+
 	util.Response(c, util.R{Code: e.SUCCESS, Data: data})
 }

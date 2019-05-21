@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"log"
 	"shop/models"
 	"shop/pkg/util"
 	"time"
@@ -44,7 +43,7 @@ var (
 	url = "https://api.weixin.qq.com/sns/jscode2session"
 )
 
-func UserLogin(userInfo, code string, wxappId uint) (session string, err error) {
+func UserLogin(userInfo, code string, wxappId uint) (session string, userId uint, err error) {
 	var (
 		appInfo models.Wxapp
 		openId  string
@@ -56,10 +55,9 @@ func UserLogin(userInfo, code string, wxappId uint) (session string, err error) 
 		return
 	}
 	if session, openId, err = getSessionFromWeiChat(code, appInfo.AppId, appInfo.AppSecret); err != nil {
-		log.Println(err)
 		return
 	}
-	register(userInfo, wxappId, openId)
+	userId, err = register(userInfo, wxappId, openId)
 	return
 }
 
@@ -95,13 +93,12 @@ func getSessionFromWeiChat(code, appId, appSecret string) (session, openid strin
 
 	session, err = util.GenerateToken(sessionInfo.Openid)
 	openid = sessionInfo.Openid
-	log.Println(session)
 	return
 }
 
-func register(userInfo string, wxappId uint, openId string) {
+func register(userInfo string, wxappId uint, openId string) (userId uint, err error) {
 	var register registerUser
-	var err error
+
 	if err = json.Unmarshal([]byte(userInfo), &register); err != nil {
 		return
 	}
@@ -119,6 +116,6 @@ func register(userInfo string, wxappId uint, openId string) {
 		UpdateTime: time.Now().Unix(),
 	}
 	err = models.Db.Create(&user).Error
-	log.Println(user.UserId)
-	log.Println(err)
+	userId = user.UserId
+	return
 }

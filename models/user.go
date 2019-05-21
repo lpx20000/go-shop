@@ -1,7 +1,7 @@
 package models
 
 type User struct {
-	UserId     uint
+	UserId     uint `gorm:"AUTO_INCREMENT"`
 	OpenId     string
 	NickName   string `gorm:"column:nickName"`
 	AvatarUrl  string `gorm:"column:avatarUrl"`
