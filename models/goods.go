@@ -26,6 +26,11 @@ type Goods struct {
 	GoodsStatusArray map[string]interface{} `json:"goods_status"`
 	IsDelete         uint8                  `json:"-"`
 	WxappId          uint                   `json:"-"`
+	GoodsSkuId       string                 `json:"goods_sku_id,omitempty"`
+	GoodsPrice       float32                `json:"goods_price,omitempty"`
+	TotalNum         uint                   `json:"total_num,omitempty"`
+	TotalPrice       float32                `json:"total_price,omitempty"`
+	GoodsSku         GoodsSpec              `json:"goods_sku,omitempty"`
 	GoodsMinPrice    string                 `json:"goods_min_price,omitempty"`
 	GoodsMaxPrice    string                 `json:"goods_max_price,omitempty"`
 	Category         Category               `gorm:"foreignkey:CategoryId;association_foreignkey:CategoryId" json:"category,omitempty" ` //belongsTo
@@ -86,5 +91,20 @@ func (g *Goods) GetManySpecData() (specAttrResult SpecAttrResult) {
 		specAttrResult.SpecList = append(specAttrResult.SpecList, specList)
 	}
 
+	return
+}
+
+func GetGoodsInfoForCartList(goodsId []uint) (goods []Goods) {
+	Db.Where(map[string]interface{}{
+		"is_delete": 0,
+	}).Where(goodsId).
+		Preload("Category").
+		Preload("GoodsSpec").
+		Preload("GoodsImage").
+		Preload("Delivery").
+		Preload("GoodsSpecRel").
+		Order("goods_id DESC").
+		Order("goods_sort ASC").
+		Find(&goods)
 	return
 }

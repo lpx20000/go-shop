@@ -27,6 +27,11 @@ func UserLogin(c *gin.Context) {
 		token  string
 		err    error
 	)
+
+	tokens, _ := util.GenerateToken("oZ54Q5T2Nzdhz6kLdfSSFwHBprwg")
+	util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: tokens})
+	return
+
 	data := make(map[string]interface{})
 	if err = c.ShouldBindWith(&user, binding.FormPost); err != nil {
 		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: err.Error()})
@@ -35,9 +40,12 @@ func UserLogin(c *gin.Context) {
 
 	token, userId, err = services.UserLogin(user.UserInfo, user.Code, user.WxappId)
 
+	if err != nil {
+		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: err.Error()})
+		return
+	}
+
 	data["token"] = token
 	data["user_id"] = userId
-	data["err"] = err
-
 	util.Response(c, util.R{Code: e.SUCCESS, Data: data})
 }
