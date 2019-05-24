@@ -10,9 +10,10 @@ type GoodsSpecList struct {
 	GoodsNo       string  `json:"goods_no"`
 	GoodsPrice    float32 `json:"goods_price"`
 	LinePrice     float32 `json:"line_price"`
-	StockNum      uint    `json:"stock_num"`
+	StockNum      int     `json:"stock_num"`
 	GoodsSales    uint    `json:"goods_sales"`
 	GoodsWeight   float64 `json:"goods_weight"`
+	GoodsAttr     string  `json:"goods_attr,omitempty"`
 	WxappId       uint    `json:"-"`
 	SpecSkuId     string  `json:"spec_sku_id"`
 	GoodsMinPrice float32 `json:"-"`

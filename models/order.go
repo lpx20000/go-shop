@@ -18,3 +18,16 @@ type Order struct {
 	UserId         uint    `json:"user_id"`
 	WxappId        uint    `json:"wxapp_id"`
 }
+
+type CartOrder struct {
+	GoodList        []Goods     `json:"good_list"`
+	OrderTotalNum   int         `json:"order_total_num"`
+	OrderTotalPrice float64     `json:"order_total_price"`
+	OrderPayPrice   float64     `json:"order_pay_price"`
+	Address         UserAddress `json:"address"`
+	ExistAddress    bool        `json:"exist_address"`
+	ExpressPrice    float64     `json:"express_price"`
+	IntraRegion     bool        `json:"intra_region"`
+	HasError        bool        `json:"has_error"`
+	ErrorMsg        string      `json:"error_msg"`
+}

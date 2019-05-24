@@ -5,8 +5,8 @@ import "time"
 type GoodsSpecRel struct {
 	GoodsSpecRefer
 	GoodsId   uint      `json:"goods_id"`
-	Spec      Spec      `gorm:"foreignkey:SpecId;association_foreignkey:SpecId" json:"spec" `       //belongsTo
-	SpecValue SpecValue `gorm:"foreignkey:SpecId;association_foreignkey:SpecId" json:"spec_value" ` //belongsTo
+	Spec      Spec      `gorm:"foreignkey:SpecId;association_foreignkey:SpecId" json:"spec" `                 //belongsTo
+	SpecValue SpecValue `gorm:"foreignkey:SpecValueId;association_foreignkey:SpecValueId" json:"spec_value" ` //belongsTo
 }
 
 type GoodsSpecRefer struct {

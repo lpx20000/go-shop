@@ -20,7 +20,7 @@ type SpecAttrData struct {
 }
 
 type SpecItem struct {
-	ItemId    uint   `json:"item_id"`
+	ItemId    int    `json:"item_id"`
 	SpecValue string `json:"spec_value"`
 }
 
@@ -36,5 +36,5 @@ type Form struct {
 	GoodsPrice  float32 `json:"goods_price"`
 	GoodsWeight float64 `json:"goods_weight"`
 	LinePrice   float32 `json:"line_price"`
-	StockNum    uint    `json:"stock_num"`
+	StockNum    int     `json:"stock_num"`
 }

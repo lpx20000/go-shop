@@ -2,6 +2,8 @@ package models
 
 import (
 	"html"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -11,7 +13,7 @@ const (
 )
 
 type Goods struct {
-	GoodsId          uint                   `json:"goods_id"`
+	GoodsId          uint                   `gorm:"AUTO_INCREMENT,primary_key" json:"goods_id"`
 	GoodsName        string                 `json:"goods_name"`
 	CategoryId       uint                   `json:"category_id"`
 	GoodsSales       uint                   `json:"goods_sales"`
@@ -27,9 +29,11 @@ type Goods struct {
 	IsDelete         uint8                  `json:"-"`
 	WxappId          uint                   `json:"-"`
 	GoodsSkuId       string                 `json:"goods_sku_id,omitempty"`
-	GoodsPrice       float32                `json:"goods_price,omitempty"`
-	TotalNum         uint                   `json:"total_num,omitempty"`
-	TotalPrice       float32                `json:"total_price,omitempty"`
+	GoodsPrice       float64                `json:"goods_price,omitempty"`
+	TotalNum         int                    `json:"total_num,omitempty"`
+	TotalPrice       float64                `json:"total_price,omitempty"`
+	GoodsTotalWeight float64                `json:"goods_total_weight,omitempty"`
+	ExpressPrice     float64                `json:"express_price,omitempty"`
 	GoodsSku         GoodsSpec              `json:"goods_sku,omitempty"`
 	GoodsMinPrice    string                 `json:"goods_min_price,omitempty"`
 	GoodsMaxPrice    string                 `json:"goods_max_price,omitempty"`
@@ -94,10 +98,36 @@ func (g *Goods) GetManySpecData() (specAttrResult SpecAttrResult) {
 	return
 }
 
+// 商品多规格信息
+func (g *Goods) GetGoodsSku(goodSkuId string) (goodSkuInfo GoodsSpec) {
+	for _, item := range g.GoodsSpec {
+		if item.SpecSkuId == goodSkuId {
+			goodSkuInfo = item
+		}
+	}
+	if goodSkuInfo.GoodsId == 0 {
+		return
+	}
+	if g.SpecType == 20 {
+		attrs := strings.Split(goodSkuInfo.SpecSkuId, "_")
+		specRel := make(map[string]SpecRel)
+		goodsSpecRel := GetGoodsSpecRel(g.GoodsId)
+		g.SpecRel = goodsSpecRel
+		for _, item := range goodsSpecRel {
+			specRel[strconv.Itoa(item.SpecValueId)] = item
+		}
+
+		for _, attr := range attrs {
+			specRelInfo := specRel[attr]
+			goodSkuInfo.GoodsAttr += specRelInfo.Spec.SpecName + ":" + specRelInfo.SpecValue.SpecValue + ";"
+		}
+	}
+
+	return
+}
+
 func GetGoodsInfoForCartList(goodsId []uint) (goods []Goods) {
-	Db.Where(map[string]interface{}{
-		"is_delete": 0,
-	}).Where(goodsId).
+	Db.Where(&Goods{IsDelete: 0}).Where("goods_id in (?)", goodsId).
 		Preload("Category").
 		Preload("GoodsSpec").
 		Preload("GoodsImage").
@@ -106,5 +136,29 @@ func GetGoodsInfoForCartList(goodsId []uint) (goods []Goods) {
 		Order("goods_id DESC").
 		Order("goods_sort ASC").
 		Find(&goods)
+	return
+}
+
+func GetGoodsSpecRel(goodId uint) (specRelAll []SpecRel) {
+	var goodsSpecRel []GoodsSpecRel
+	Db.Model(&GoodsSpecRel{}).
+		Where(&GoodsSpecRel{GoodsId: goodId}).
+		Preload("Spec").
+		Preload("SpecValue").
+		Find(&goodsSpecRel)
+
+	for _, v := range goodsSpecRel {
+		var spec SpecRel
+		spec.SpecValue = v.SpecValue
+		spec.Spec = v.Spec
+		spec.Pivot.Id = v.Id
+		spec.Pivot.GoodsId = v.GoodsId
+		spec.Pivot.SpecId = v.SpecId
+		spec.Pivot.SpecValueId = v.SpecValueId
+		spec.Pivot.WxappId = v.WxappId
+		spec.Pivot.CreateTimeStamp = v.CreateTimeStamp
+		spec.Pivot.GoodsId = v.GoodsSpecRefer.GoodsId
+		specRelAll = append(specRelAll, spec)
+	}
 	return
 }

@@ -8,9 +8,9 @@ type DeliveryRule struct {
 	Region        string   `json:"region"`
 	RegionData    []string `json:"region_data"`
 	First         float64  `json:"first"`
-	FirstFee      float32  `json:"first_fee"`
+	FirstFee      float64  `json:"first_fee"`
 	Additional    float64  `json:"additional"`
-	AdditionalFee float32  `json:"additional_fee"`
+	AdditionalFee float64  `json:"additional_fee"`
 	WxappId       uint     `json:"-"`
 }
 

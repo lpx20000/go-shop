@@ -34,6 +34,7 @@ func InitRouter() *gin.Engine {
 		apia1.GET("/category", v1.GetGoodCategory)
 		apia1.GET("/list", v1.GetGoodList)
 		apia1.GET("/cart", v1.GetCartList)
+		apia1.GET("/address", v1.GetCartAddress)
 	}
 
 	return r
