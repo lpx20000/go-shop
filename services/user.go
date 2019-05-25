@@ -36,7 +36,7 @@ var (
 	url = "https://api.weixin.qq.com/sns/jscode2session"
 )
 
-func UserLogin(userInfo, code string, wxappId uint) (session string, userId uint, err error) {
+func UserLogin(userInfo, code string, wxappId uint) (session string, userId int, err error) {
 	var (
 		appInfo AppInfo
 		openId  string
@@ -51,6 +51,23 @@ func UserLogin(userInfo, code string, wxappId uint) (session string, userId uint
 		return
 	}
 	userId, err = models.Register(userInfo, wxappId, openId)
+	return
+}
+
+func GetUserDetail(token string) (data map[string]interface{}) {
+	var (
+		userInfo   models.User
+		orderCount map[string]int
+	)
+	data = make(map[string]interface{})
+	orderCount = make(map[string]int)
+
+	userInfo = models.GetUserInfoByOpenId(token)
+
+	data["userInfo"] = userInfo
+	orderCount["payment"] = models.GetCount(userInfo.UserId, "payment")
+	orderCount["received"] = models.GetCount(userInfo.UserId, "received")
+	data["orderCount"] = orderCount
 	return
 }
 

@@ -15,7 +15,7 @@ type Order struct {
 	ReceiptTime    uint    `json:"receipt_time"`
 	OrderStatus    uint8   `json:"order_status"`
 	TransactionId  string  `json:"transaction_id"`
-	UserId         uint    `json:"user_id"`
+	UserId         int     `json:"user_id"`
 	WxappId        uint    `json:"wxapp_id"`
 }
 
@@ -30,4 +30,25 @@ type CartOrder struct {
 	IntraRegion     bool        `json:"intra_region"`
 	HasError        bool        `json:"has_error"`
 	ErrorMsg        string      `json:"error_msg"`
+}
+
+func GetCount(userId int, filter string) (count int) {
+	var (
+		filters map[string]interface{}
+	)
+	filters = make(map[string]interface{})
+	switch filter {
+	case "all":
+	case "payment":
+		filters["pay_status"] = 10
+	case "received":
+		filters["pay_status"] = 20
+		filters["receipt_status"] = 20
+		filters["receipt_status"] = 10
+	}
+
+	Db.Model(&Order{}).Where(&Order{UserId: userId}).
+		Not("order_status", 20).
+		Where(filters).Count(&count)
+	return
 }

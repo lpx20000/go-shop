@@ -6,8 +6,8 @@ import (
 )
 
 type User struct {
-	UserId         uint `gorm:"AUTO_INCREMENT"`
-	OpenId         string
+	UserId         int    `gorm:"AUTO_INCREMENT"`
+	OpenId         string `json:"-"`
 	NickName       string `gorm:"column:nickName"`
 	AvatarUrl      string `gorm:"column:avatarUrl"`
 	Gender         uint8
@@ -15,11 +15,11 @@ type User struct {
 	Province       string
 	City           string
 	AddressId      uint
-	WxappId        uint
-	CreateTime     int64
-	UpdateTime     int64
-	UserAddress    []UserAddress `gorm:"foreignkey:UserId;association_foreignkey:UserId" json:"address,omitempty" `              //hasMany
-	AddressDefault UserAddress   `gorm:"foreignkey:AddressId;association_foreignkey:AddressId" json:"addressDefault,omitempty" ` //belongsTo
+	WxappId        uint          `json:"-"`
+	CreateTime     int64         `json:"-"`
+	UpdateTime     int64         `json:"-"`
+	UserAddress    []UserAddress `gorm:"foreignkey:UserId;association_foreignkey:UserId" json:"address,omitempty" `               //hasMany
+	AddressDefault UserAddress   `gorm:"foreignkey:AddressId;association_foreignkey:AddressId" json:"address_default,omitempty" ` //belongsTo
 }
 
 type RegisterUser struct {
@@ -42,7 +42,7 @@ func GetUserInfoByOpenId(token interface{}) (userInfo User) {
 	return
 }
 
-func Register(userInfo string, wxappId uint, openId string) (userId uint, err error) {
+func Register(userInfo string, wxappId uint, openId string) (userId int, err error) {
 	var register RegisterUser
 
 	if err = json.Unmarshal([]byte(userInfo), &register); err != nil {
@@ -63,5 +63,45 @@ func Register(userInfo string, wxappId uint, openId string) (userId uint, err er
 	}
 	err = Db.Create(&user).Error
 	userId = user.UserId
+	return
+}
+
+func (u *User) AfterFind() error {
+	var (
+		all        map[int]CommonList
+		commonList []CommonList
+	)
+	if u.AddressDefault.UserId > 0 {
+		all = make(map[int]CommonList)
+
+		commonList = GetRegion()
+
+		for _, item := range commonList {
+			all[item.Id] = item
+		}
+		u.AddressDefault.RegionInfo = RegionInfo{
+			Province: all[u.AddressDefault.ProvinceId].Name,
+			City:     all[u.AddressDefault.CityId].Name,
+			Region:   all[u.AddressDefault.RegionId].Name,
+		}
+	}
+
+	if len(u.UserAddress) > 0 {
+		for index, address := range u.UserAddress {
+			u.UserAddress[index].RegionInfo = RegionInfo{
+				Province: all[address.ProvinceId].Name,
+				City:     all[address.CityId].Name,
+				Region:   all[address.RegionId].Name,
+			}
+		}
+	}
+
+	return nil
+}
+
+func GetUserIdByToken(token string) (uid int) {
+	var user User
+	Db.Where(&User{OpenId: token}).Select("user_id").First(&user)
+	uid = user.UserId
 	return
 }

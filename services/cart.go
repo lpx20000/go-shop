@@ -226,18 +226,17 @@ func GetGoodsSku(goodSkuId string, g models.Goods) (goodSkuInfo models.GoodsSpec
 	return
 }
 
-func GetRegionInfo() (all map[int]models.CommonList, tree map[int]models.Tree) {
+func GetRegionInfo() (tree map[int]models.Tree) {
 	var (
 		commonList []models.CommonList
 	)
 
-	all = make(map[int]models.CommonList)
 	tree = make(map[int]models.Tree)
 
 	commonList = models.GetRegion()
 
 	for _, province := range commonList {
-		all[province.Id] = province
+
 		if province.Level == 1 {
 			tree[province.Id] = models.Tree{
 				CommonList: province,

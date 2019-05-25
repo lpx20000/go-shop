@@ -36,7 +36,3 @@ func GetRegion() (commonList []CommonList) {
 	Db.Model(&Region{}).Select("id, pid, name, level").Scan(&commonList)
 	return
 }
-
-func GetRegionInfo() (all map[int]CommonList, tree map[int]Tree) {
-	return
-}
