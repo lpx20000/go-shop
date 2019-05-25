@@ -6,29 +6,28 @@ import (
 	"strings"
 )
 
-func GetGoodDetail(goodId uint) (goods models.Goods, err error) {
-	err = models.Db.Where(map[string]interface{}{
-		"is_delete": 0, "goods_status": models.ON_SALES,
-		"goods_id": goodId,
-	}).
-		Preload("Category").
-		Preload("GoodsSpec").
-		Preload("GoodsImage").
-		Preload("Delivery").
-		Preload("GoodsSpecRel").
-		Order("goods_id DESC").
-		Order("goods_sort ASC").
-		First(&goods).Error
+func GetGoodDetail(goodId uint) (data map[string]interface{}, err error) {
+	var (
+		good models.Goods
+	)
+	data = make(map[string]interface{})
+	if good, err = models.GetGoodDetail(goodId); err != nil {
+		return
+	}
+	if good.SpecRel, err = GetGoodsSpecRel(goodId); err != nil {
+		return
+	}
+	data["info"] = good
+	data["specData"] = GetManySpecData(good)
 	return
 }
 
-func GetGoodsSpecRel(goodId uint) (specRelAll []models.SpecRel) {
+func GetGoodsSpecRel(goodId uint) (specRelAll []models.SpecRel, err error) {
 	var goodsSpecRel []models.GoodsSpecRel
-	models.Db.Model(&models.GoodsSpecRel{}).
-		Where(&models.GoodsSpecRel{GoodsId: goodId}).
-		Preload("Spec").
-		Preload("SpecValue").
-		Find(&goodsSpecRel)
+	goodsSpecRel, err = models.GetGoodSpecRel(goodId)
+	if err != nil {
+		return
+	}
 
 	for _, v := range goodsSpecRel {
 		var spec models.SpecRel
@@ -95,6 +94,47 @@ func GetGoodsList(page int,
 	data["current_page"] = page
 	data["last_page"] = math.Ceil(float64(total) / float64(models.PER_PAGE))
 	data["data"] = goods
+
+	return
+}
+
+func GetManySpecData(g models.Goods) (specAttrResult models.SpecAttrResult) {
+	if g.SpecType == models.SINGLE_SPEC || len(g.SpecRel) == 0 || len(g.GoodsSpec) == 0 {
+		return
+	}
+	specAttrData := make(map[uint]models.SpecAttrData)
+
+	for _, specRel := range g.SpecRel {
+		temp := specAttrData[specRel.SpecId]
+		if temp.GroupId == 0 {
+			temp.GroupId = specRel.Spec.SpecId
+			temp.GroupName = specRel.Spec.SpecName
+		}
+		temp.SpecItem = append(temp.SpecItem, models.SpecItem{
+			ItemId:    specRel.SpecValueId,
+			SpecValue: specRel.SpecValue.SpecValue,
+		})
+		specAttrData[specRel.SpecId] = temp
+	}
+
+	for _, value := range specAttrData {
+		specAttrResult.SpecAttr = append(specAttrResult.SpecAttr, value)
+	}
+
+	for _, list := range g.GoodsSpec {
+		var specList models.SpecListData
+		specList.GoodsSpecId = list.GoodsSpecId
+		specList.Rows = make([]int, 0)
+		specList.SpecSkuId = list.SpecSkuId
+		specList.Form = models.Form{
+			GoodsNo:     list.GoodsNo,
+			GoodsPrice:  list.GoodsPrice,
+			GoodsWeight: list.GoodsWeight,
+			LinePrice:   list.LinePrice,
+			StockNum:    list.StockNum,
+		}
+		specAttrResult.SpecList = append(specAttrResult.SpecList, specList)
+	}
 
 	return
 }

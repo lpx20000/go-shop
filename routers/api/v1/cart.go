@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"shop/models"
 	"shop/pkg/e"
 	"shop/pkg/util"
 	"shop/services"
@@ -39,6 +38,6 @@ func GetCartList(c *gin.Context) {
 
 func GetCartAddress(c *gin.Context) {
 	data := make(map[string]interface{})
-	data["all"], data["tree"] = models.GetRegionInfo()
+	data["all"], data["tree"] = services.GetRegionInfo()
 	util.Response(c, util.R{Code: e.SUCCESS, Data: data})
 }

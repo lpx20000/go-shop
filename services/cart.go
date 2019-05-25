@@ -79,7 +79,7 @@ func GetCartInfo(token string, wxappId string) (cart models.CartOrder) {
 		}
 		good = goodsInfo[cart.GoodID]
 		good.GoodsSkuId = cart.GoodsSkuID
-		goodSku = good.GetGoodsSku(cart.GoodsSkuID)
+		goodSku = GetGoodsSku(cart.GoodsSkuID, good)
 		if goodSku.GoodsId == 0 {
 			carts = append(carts[:index], carts[index+1:]...)
 			continue
@@ -194,6 +194,71 @@ func getTotalPriceAndExpress(goods []models.Goods) (price float64, express []flo
 	for _, item := range goods {
 		price += item.TotalPrice
 		express = append(express, item.ExpressPrice)
+	}
+	return
+}
+
+// 商品多规格信息
+func GetGoodsSku(goodSkuId string, g models.Goods) (goodSkuInfo models.GoodsSpec) {
+	for _, item := range g.GoodsSpec {
+		if item.SpecSkuId == goodSkuId {
+			goodSkuInfo = item
+		}
+	}
+	if goodSkuInfo.GoodsId == 0 {
+		return
+	}
+	if g.SpecType == 20 {
+		attrs := strings.Split(goodSkuInfo.SpecSkuId, "_")
+		specRel := make(map[string]models.SpecRel)
+		goodsSpecRel, _ := GetGoodsSpecRel(g.GoodsId)
+		g.SpecRel = goodsSpecRel
+		for _, item := range goodsSpecRel {
+			specRel[strconv.Itoa(item.SpecValueId)] = item
+		}
+
+		for _, attr := range attrs {
+			specRelInfo := specRel[attr]
+			goodSkuInfo.GoodsAttr += specRelInfo.Spec.SpecName + ":" + specRelInfo.SpecValue.SpecValue + ";"
+		}
+	}
+
+	return
+}
+
+func GetRegionInfo() (all map[int]models.CommonList, tree map[int]models.Tree) {
+	var (
+		commonList []models.CommonList
+	)
+
+	all = make(map[int]models.CommonList)
+	tree = make(map[int]models.Tree)
+
+	commonList = models.GetRegion()
+
+	for _, province := range commonList {
+		all[province.Id] = province
+		if province.Level == 1 {
+			tree[province.Id] = models.Tree{
+				CommonList: province,
+				City:       make(map[int]models.City, 0),
+			}
+
+			for _, city := range commonList {
+				if city.Level == 2 && city.Pid == province.Id {
+					tree[province.Id].City[city.Id] = models.City{
+						CommonList: city,
+						RegionInfo: make(map[int]models.CommonList, 0),
+					}
+
+					for _, region := range commonList {
+						if region.Level == 3 && region.Pid == city.Id {
+							tree[province.Id].City[city.Id].RegionInfo[region.Id] = region
+						}
+					}
+				}
+			}
+		}
 	}
 	return
 }

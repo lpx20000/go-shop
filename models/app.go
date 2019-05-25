@@ -35,3 +35,11 @@ func (app *Wxapp) AfterFind() error {
 
 	return nil
 }
+
+func GetAppBase(appId uint) (app Wxapp, err error) {
+	err = Db.Select("wxapp_id, is_service, service_image_id, is_phone, phone_no, phone_image_id").
+		Where(&Wxapp{WxappId: appId}).
+		Preload("Navbar").
+		First(&app).Error
+	return
+}

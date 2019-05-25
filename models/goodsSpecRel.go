@@ -31,3 +31,12 @@ func (g *GoodsSpecRel) AfterFind() error {
 	g.CreateTimeStamp = time.Unix(g.CreateTime, 0).Format("2006-01-02 15:04:05")
 	return nil
 }
+
+func GetGoodSpecRel(goodId uint) (goodsSpecRel []GoodsSpecRel, err error) {
+	err = Db.Model(&GoodsSpecRel{}).
+		Where(&GoodsSpecRel{GoodsId: goodId}).
+		Preload("Spec").
+		Preload("SpecValue").
+		Find(&goodsSpecRel).Error
+	return
+}

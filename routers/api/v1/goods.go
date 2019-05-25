@@ -39,10 +39,7 @@ func GetGoodDetail(c *gin.Context) {
 	var err error
 
 	if info, err := services.GetGoodDetail(detail.GoodId); err == nil {
-		data["detail"] = info
-		info.SpecRel = services.GetGoodsSpecRel(info.GoodsId)
-		data["specData"] = info.GetManySpecData()
-		util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+		util.Response(c, util.R{Code: e.SUCCESS, Data: info})
 		return
 	}
 	data["detail"] = err

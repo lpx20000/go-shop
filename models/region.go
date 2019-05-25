@@ -32,40 +32,11 @@ type CommonList struct {
 	Level uint8  `json:"level"`
 }
 
-func GetRegionInfo() (all map[int]CommonList, tree map[int]Tree) {
-	var (
-		commonList []CommonList
-	)
-
-	all = make(map[int]CommonList)
-	tree = make(map[int]Tree)
-
+func GetRegion() (commonList []CommonList) {
 	Db.Model(&Region{}).Select("id, pid, name, level").Scan(&commonList)
+	return
+}
 
-	for pKey, province := range commonList {
-		all[province.Id] = province
-		if province.Level == 1 {
-			tree[province.Id] = Tree{
-				CommonList: province,
-				City:       make(map[int]City, 0),
-			}
-			commonList[pKey] = CommonList{}
-			for cKey, city := range commonList {
-				if city.Level == 2 && city.Pid == province.Id {
-					tree[province.Id].City[city.Id] = City{
-						CommonList: city,
-						RegionInfo: make(map[int]CommonList, 0),
-					}
-					commonList[cKey] = CommonList{}
-					for rKey, region := range commonList {
-						if region.Level == 3 && region.Pid == city.Id {
-							tree[province.Id].City[city.Id].RegionInfo[region.Id] = region
-							commonList[rKey] = CommonList{}
-						}
-					}
-				}
-			}
-		}
-	}
+func GetRegionInfo() (all map[int]CommonList, tree map[int]Tree) {
 	return
 }

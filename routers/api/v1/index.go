@@ -20,12 +20,8 @@ type AppRequest struct {
 // @Success 500 {string} json "{"code":500,"data":{},"msg":"We need ID!"}"
 // @Router /api/v1/index?wxapp_id={id} [get]
 func GetAppInfo(c *gin.Context) {
-	data := make(map[string]interface{})
 	models.SetInfo(c.Request.Host)
-	data["items"] = services.GetPageItem()
-	data["newest"] = services.GetNewestGood()
-	data["best"] = services.GetBestGoods()
-	util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+	util.Response(c, util.R{Code: e.SUCCESS, Data: services.GetAppIndex()})
 }
 
 // @Summary 获取小程序基本信息
