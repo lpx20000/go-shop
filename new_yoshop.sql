@@ -1,7 +1,7 @@
 /*
 Navicat MySQL Data Transfer
 
-Source Server         : localhost
+Source Server         : docker-localo
 Source Server Version : 50726
 Source Host           : localhost:3306
 Source Database       : new_yoshop
@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50726
 File Encoding         : 65001
 
-Date: 2019-05-20 18:29:51
+Date: 2019-05-25 15:04:16
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -4228,12 +4228,12 @@ CREATE TABLE `yoshop_user` (
   `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`user_id`),
   KEY `openid` (`open_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10002 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=10026 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of yoshop_user
 -- ----------------------------
-INSERT INTO `yoshop_user` VALUES ('10001', 'oZ54Q5T2Nzdhz6kLdfSSFwHBprwg', '培喜', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83epUjyw9lZGEXW8Dl4dknARxic9vibqU1oB5AW5xGEgiba3mMA11NRia5m5j1AokCQQ25sdCgSaKJ1Vfjg/132', '1', '中国', '广东', '深圳', '0', '10001', '1557138392', '1557138392');
+INSERT INTO `yoshop_user` VALUES ('10023', 'oZ54Q5T2Nzdhz6kLdfSSFwHBprwg', '培喜', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83epUjyw9lZGEXW8Dl4dknARxic9vibqU1oB5AW5xGEgiba3mMA11NRia5m5j1AokCQQ25sdCgSaKJ1Vfjg/132', '1', '中国', '广东', '深圳', '1', '10001', '1558435581', '1558504341');
 
 -- ----------------------------
 -- Table structure for yoshop_user_address
@@ -4252,11 +4252,13 @@ CREATE TABLE `yoshop_user_address` (
   `create_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '创建时间',
   `update_time` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`address_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of yoshop_user_address
 -- ----------------------------
+INSERT INTO `yoshop_user_address` VALUES ('1', '梁培喜', '13760660351', '1964', '1988', '1991', '南山街道一号', '10023', '10001', '1558504341', '1558504341');
+INSERT INTO `yoshop_user_address` VALUES ('2', '温柔热舞', '13760660324', '1', '2', '3', '朝阳小区二号', '10023', '10001', '1558504582', '1558504582');
 
 -- ----------------------------
 -- Table structure for yoshop_wxapp
