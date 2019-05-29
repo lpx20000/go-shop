@@ -1,9 +1,11 @@
 package v1
 
 import (
+	"regexp"
 	"shop/pkg/e"
 	"shop/pkg/util"
 	"shop/services"
+	"strings"
 
 	"github.com/gin-gonic/gin/binding"
 
@@ -20,10 +22,6 @@ type User struct {
 	Iv            string `form:"iv" binding:"required" json:"iv"`
 }
 
-type authToken struct {
-	Token string `form:"token" binding:"required"`
-}
-
 func UserLogin(c *gin.Context) {
 	var (
 		user   User
@@ -38,14 +36,14 @@ func UserLogin(c *gin.Context) {
 
 	data := make(map[string]interface{})
 	if err = c.ShouldBindWith(&user, binding.FormPost); err != nil {
-		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: err.Error()})
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 		return
 	}
 
 	token, userId, err = services.UserLogin(user.UserInfo, user.Code, user.WxappId)
 
 	if err != nil {
-		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: err.Error()})
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 		return
 	}
 
@@ -57,18 +55,41 @@ func UserLogin(c *gin.Context) {
 func GetUserDetail(c *gin.Context) {
 	var (
 		token string
-		auth  authToken
 		data  map[string]interface{}
 	)
-	if c.ShouldBindQuery(&auth) != nil {
-		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: e.GetMsg(e.INVALID_PARAMS)})
-		return
-	}
-	token = c.GetString(auth.Token)
-	if token == "" {
-		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: e.GetMsg(e.INVALID_PARAMS)})
-		return
-	}
+	token = c.GetString("token")
 	data = services.GetUserDetail(token)
 	util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+}
+
+func GetUserAddress(c *gin.Context) {
+	var (
+		userId int
+	)
+	userId = c.GetInt("userId")
+	util.Response(c, util.R{Code: e.SUCCESS, Data: services.GetUserAddress(userId)})
+}
+
+func AddAddress(c *gin.Context) {
+	var (
+		addressInfo services.AddAddress
+		err         error
+	)
+
+	if err = c.ShouldBindWith(&addressInfo, binding.FormPost); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		return
+	}
+
+	if !(regexp.MustCompile(`^1[345678]{1}\d{9}$`).MatchString(strings.TrimSpace(addressInfo.Phone))) {
+		util.Response(c, util.R{Code: e.ERROR, Data: "手机号码不正确"})
+		return
+	}
+	addressInfo.UserId = c.GetInt("userId")
+	addressInfo.WxappId = c.GetString("wxappId")
+	if err = services.AddUserAddress(addressInfo); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		return
+	}
+	util.Response(c, util.R{Code: e.SUCCESS, Data: "添加成功"})
 }

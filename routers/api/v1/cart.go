@@ -17,22 +17,11 @@ import (
 // @Router /api/v1/list?wxapp_id={id} [get]
 func GetCartList(c *gin.Context) {
 	var (
-		auth    authToken
 		token   string
 		wxappId string
 	)
 
-	if c.ShouldBindQuery(&auth) != nil {
-		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: e.GetMsg(e.INVALID_PARAMS)})
-		return
-	}
-
-	token = c.GetString(auth.Token)
-	if token == "" {
-		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: e.GetMsg(e.INVALID_PARAMS)})
-		return
-	}
-
+	token = c.GetString("token")
 	wxappId = c.GetString("wxappId")
 	data := services.GetCartInfo(token, wxappId)
 

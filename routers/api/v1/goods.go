@@ -33,7 +33,7 @@ func GetGoodDetail(c *gin.Context) {
 	data := make(map[string]interface{})
 
 	if c.ShouldBindQuery(&detail) != nil {
-		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: data})
+		util.Response(c, util.R{Code: e.ERROR, Data: data})
 		return
 	}
 	var err error
@@ -65,11 +65,11 @@ func GetGoodList(c *gin.Context) {
 	)
 	data := make(map[string]interface{})
 	if err := c.ShouldBindQuery(&list); err != nil {
-		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: err})
+		util.Response(c, util.R{Code: e.ERROR, Data: err})
 		return
 	}
 
-	models.SetInfo(c.Request.Host)
+	models.Host = c.Request.Host
 
 	page = 1
 

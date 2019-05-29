@@ -10,11 +10,22 @@ import (
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := c.Query("token")
-		wxappId := c.Query("wxapp_id")
+		var (
+			token   string
+			wxappId string
+			err     error
+		)
+
+		if c.Request.Method == "GET" {
+			token = c.Query("token")
+			wxappId = c.Query("wxapp_id")
+		} else if c.Request.Method == "POST" {
+			token = c.Request.FormValue("token")
+			wxappId = c.Request.FormValue("wxapp_id")
+		}
 
 		if len(token) == 0 {
-			util.Response(c, util.R{Code: e.ERROR_AUTH_TOKEN, Data: e.GetMsg(e.ERROR_AUTH_TOKEN)})
+			util.Response(c, util.R{Code: e.ERROR, Data: e.GetMsg(e.ERROR_AUTH_TOKEN)})
 			c.Abort()
 			return
 		}

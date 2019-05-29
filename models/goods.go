@@ -2,6 +2,8 @@ package models
 
 import (
 	"html"
+
+	"github.com/jinzhu/gorm"
 )
 
 const (
@@ -84,25 +86,39 @@ func GetGoodDetail(goodId uint) (goods Goods, err error) {
 	return
 }
 
-func GetIndexBestGoods() (goods []Goods) {
-	Db.Where(map[string]interface{}{"is_delete": 0, "goods_status": ON_SALES}).
+func GetIndexBestGoods() ([]*Goods, error) {
+	var (
+		goods []*Goods
+		err   error
+	)
+	err = Db.Where(map[string]interface{}{"is_delete": 0, "goods_status": ON_SALES}).
 		Preload("Category").
 		Preload("GoodsSpec").
 		Preload("GoodsImage").
 		Order("goods_id DESC").
 		Order("goods_sort ASC").
 		Limit(10).
-		Find(&goods)
-	return
+		Find(&goods).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return goods, err
 }
 
-func GetIndexNewestGood() (goods Goods) {
-	Db.Where(map[string]interface{}{"is_delete": 0, "goods_status": ON_SALES}).
+func GetIndexNewestGood() ([]*Goods, error) {
+	var (
+		goods []*Goods
+		err   error
+	)
+	err = Db.Where(map[string]interface{}{"is_delete": 0, "goods_status": ON_SALES}).
 		Preload("Category").
 		Preload("GoodsSpec").
 		Preload("GoodsImage").
 		Order("goods_id DESC").
 		Order("goods_sort ASC").
-		First(&goods)
-	return
+		First(&goods).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return goods, err
 }

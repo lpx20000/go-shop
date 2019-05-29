@@ -21,7 +21,7 @@ func InitRouter() *gin.Engine {
 	r.Use(gin.Recovery())
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	gin.SetMode(setting.RunMode)
+	gin.SetMode(setting.AppSetting.RunMode)
 
 	apia1 := r.Group("/api/v1")
 	apia1.POST("/login", v1.UserLogin)
@@ -29,13 +29,16 @@ func InitRouter() *gin.Engine {
 	{
 		//基本信息
 		apia1.GET("/app", v1.GetAppBase)
+		apia1.GET("/help", v1.GetAppHelp)
 		apia1.GET("/index", v1.GetAppInfo)
 		apia1.GET("/detail", v1.GetGoodDetail)
+		apia1.GET("/addressList", v1.GetUserAddress)
+		apia1.POST("/addAddress", v1.AddAddress)
 		apia1.GET("/category", v1.GetGoodCategory)
 		apia1.GET("/list", v1.GetGoodList)
 		apia1.GET("/cart", v1.GetCartList)
 		apia1.GET("/userDetail", v1.GetUserDetail)
-		apia1.GET("/orderList", v1.GetOrderList)
+		apia1.GET("/orderAllList", v1.GetOrderList)
 		apia1.GET("/address", v1.GetCartAddress)
 	}
 

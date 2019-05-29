@@ -72,21 +72,15 @@ func (u *User) AfterFind() error {
 		commonList []CommonList
 	)
 	if u.AddressDefault.UserId > 0 {
-		all = make(map[int]CommonList)
-
-		commonList = GetRegion()
-
-		for _, item := range commonList {
-			all[item.Id] = item
-		}
-		u.AddressDefault.RegionInfo = RegionInfo{
-			Province: all[u.AddressDefault.ProvinceId].Name,
-			City:     all[u.AddressDefault.CityId].Name,
-			Region:   all[u.AddressDefault.RegionId].Name,
-		}
+		u.AddressDefault.RegionInfo = GetRegionInfo(u.AddressDefault.ProvinceId, u.AddressDefault.CityId, u.AddressDefault.RegionId)
 	}
 
 	if len(u.UserAddress) > 0 {
+		all = make(map[int]CommonList)
+		commonList = GetRegion()
+		for _, item := range commonList {
+			all[item.Id] = item
+		}
 		for index, address := range u.UserAddress {
 			u.UserAddress[index].RegionInfo = RegionInfo{
 				Province: all[address.ProvinceId].Name,
@@ -103,5 +97,10 @@ func GetUserIdByToken(token string) (uid int) {
 	var user User
 	Db.Where(&User{OpenId: token}).Select("user_id").First(&user)
 	uid = user.UserId
+	return
+}
+
+func GetUserInfoByUid(uid int) (userInfo User) {
+	Db.Where(&User{UserId: uid}).Select("user_id, address_id").First(&userInfo)
 	return
 }

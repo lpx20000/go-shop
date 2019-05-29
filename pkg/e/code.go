@@ -1,10 +1,9 @@
 package e
 
 const (
-	SUCCESS        = 1
-	ERROR          = 0
-	INVALID_PARAMS = -1
-
+	SUCCESS                 = 1
+	ERROR                   = -1
+	ERROR_NOT_EXIST_PARAM   = 2
 	ERROR_EXIST_TAG         = 10001
 	ERROR_NOT_EXIST_IFNO    = 10004
 	ERROR_NOT_EXIST_TAG     = 10002
