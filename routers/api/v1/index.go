@@ -20,8 +20,17 @@ type AppRequest struct {
 // @Success 500 {string} json "{"code":500,"data":{},"msg":"We need ID!"}"
 // @Router /api/v1/index?wxapp_id={id} [get]
 func GetAppInfo(c *gin.Context) {
-	models.SetInfo(c.Request.Host)
-	util.Response(c, util.R{Code: e.SUCCESS, Data: services.GetAppIndex()})
+	var (
+		appInfo *services.App
+		err     error
+	)
+	models.Host = c.Request.Host
+	appInfo = new(services.App)
+	err = appInfo.GetIndexData()
+	if err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+	}
+	util.Response(c, util.R{Code: e.SUCCESS, Data: appInfo})
 }
 
 // @Summary 获取小程序基本信息
@@ -31,19 +40,33 @@ func GetAppInfo(c *gin.Context) {
 // @Success 500 {string} json "{"code":500,"data":{},"msg":"We need ID!"}"
 // @Router /api/v1/app?wxapp_id={id} [get]
 func GetAppBase(c *gin.Context) {
-	var app AppRequest
-	data := make(map[string]interface{})
-
+	var (
+		app     AppRequest
+		appBase *services.AppBase
+		err     error
+	)
 	if c.ShouldBindQuery(&app) != nil {
-		util.Response(c, util.R{Code: e.INVALID_PARAMS, Data: data})
+		util.Response(c, util.R{Code: e.ERROR, Data: e.GetMsg(e.ERROR_NOT_EXIST_PARAM)})
 		return
 	}
-	var err error
-	if info, err := services.GetAppBase(app.WxappID); err == nil {
-		data["wxapp"] = info
-		util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+	appBase = new(services.AppBase)
+	if err = appBase.GetAppBase(app.WxappID); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 		return
 	}
-	data["wxapp"] = err
-	util.Response(c, util.R{Code: e.ERROR, Data: data})
+	util.Response(c, util.R{Code: e.ERROR, Data: appBase})
+}
+
+// @Summary 获取小程序帮助
+// @Produce  json
+// @Success 200 {string} json "{"code":200,"data":{},"msg":"success"}"
+// @Success 500 {string} json "{"code":500,"data":{},"msg":"We need ID!"}"
+// @Router /api/v1/help?token={token} [get]
+func GetAppHelp(c *gin.Context) {
+	h := new(services.Help)
+	if err := h.GetAppHelp(); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		return
+	}
+	util.Response(c, util.R{Code: e.ERROR, Data: h})
 }

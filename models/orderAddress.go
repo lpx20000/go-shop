@@ -4,11 +4,11 @@ type OrderAddress struct {
 	OrderAddressId uint   `json:"order_address_id"`
 	Name           string `json:"name"`
 	Phone          string `json:"phone"`
-	ProvinceId     uint   `json:"province_id"`
-	CityId         uint   `json:"city_id"`
-	RegionId       uint   `json:"region_id"`
+	ProvinceId     int    `json:"province_id"`
+	CityId         int    `json:"city_id"`
+	RegionId       int    `json:"region_id"`
 	Detail         string `json:"detail"`
-	OrderId        uint   `json:"order_id"`
-	UserId         uint   `json:"user_id"`
-	WxappId        uint   `json:"wxapp_id"`
+	OrderId        uint   `json:"-"`
+	UserId         int    `json:"user_id"`
+	WxappId        uint   `json:"-"`
 }

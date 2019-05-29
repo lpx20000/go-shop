@@ -1,30 +1,46 @@
 package services
 
 import (
-	"encoding/json"
 	"shop/models"
+	"shop/pkg/e"
 )
 
-func GetAppBase(appId uint) (app models.Wxapp, err error) {
-	app, err = models.GetAppBase(appId)
-	return
+type App struct {
+	Base
+	Items  interface{}     `json:"items"`
+	Newest []*models.Goods `json:"newest"`
+	Best   []*models.Goods `json:"best"`
 }
 
-func GetAppIndex() (data map[string]interface{}) {
-	data = make(map[string]interface{})
-	data["items"] = getPageItem()
-	data["newest"] = models.GetIndexNewestGood()
-	data["best"] = models.GetIndexBestGoods()
-	return
+func (a *App) GetItemKey() string {
+	return e.CACHE_APP_ITEM
 }
 
-func getPageItem() interface{} {
-	var item models.WxappPage
-	models.Db.Select("page_data").First(&item)
-	items := item.PageData
-	var newItem models.NewItems
-	if err := json.Unmarshal([]byte(items), &newItem); err != nil {
-		return err.Error()
+func (a *App) GetIndexKey() string {
+	return e.CAHCHE_APP_INDEX
+}
+
+func (a *App) GetIndexData() (err error) {
+	var (
+		key   string
+		exist bool
+	)
+	key = a.GetIndexKey()
+	if exist, err = a.GetDataFromRedis(key); err != nil {
+		return
 	}
-	return newItem.Items
+
+	if !exist {
+		if a.Items, err = models.GetPageItem(); err != nil {
+			return
+		}
+		if a.Newest, err = models.GetIndexNewestGood(); err != nil {
+			return
+		}
+		if a.Best, err = models.GetIndexBestGoods(); err != nil {
+			return
+		}
+		err = a.SetDataWithKey(key, a)
+	}
+	return
 }
