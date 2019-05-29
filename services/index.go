@@ -1,6 +1,8 @@
 package services
 
 import (
+	"encoding/json"
+
 	"shop/models"
 	"shop/pkg/e"
 )
@@ -16,31 +18,34 @@ func (a *App) GetItemKey() string {
 	return e.CACHE_APP_ITEM
 }
 
-func (a *App) GetIndexKey() string {
+func (a *App) getIndexKey() string {
 	return e.CAHCHE_APP_INDEX
 }
 
 func (a *App) GetIndexData() (err error) {
 	var (
-		key   string
-		exist bool
+		key      string
+		exist    bool
+		dataByte []byte
 	)
-	key = a.GetIndexKey()
-	if exist, err = a.GetDataFromRedis(key); err != nil {
+	key = a.getIndexKey()
+	if dataByte, exist, err = a.getDataFromRedis(key); err != nil {
 		return
 	}
 
-	if !exist {
-		if a.Items, err = models.GetPageItem(); err != nil {
-			return
-		}
-		if a.Newest, err = models.GetIndexNewestGood(); err != nil {
-			return
-		}
-		if a.Best, err = models.GetIndexBestGoods(); err != nil {
-			return
-		}
-		err = a.SetDataWithKey(key, a)
+	if exist {
+		err = json.Unmarshal(dataByte, a)
+		return
 	}
+	if a.Items, err = models.GetPageItem(); err != nil {
+		return
+	}
+	if a.Newest, err = models.GetIndexNewestGood(); err != nil {
+		return
+	}
+	if a.Best, err = models.GetIndexBestGoods(); err != nil {
+		return
+	}
+	err = a.setDataWithKey(key, a)
 	return
 }

@@ -25,7 +25,7 @@ func GetAppInfo(c *gin.Context) {
 		err     error
 	)
 	models.Host = c.Request.Host
-	appInfo = new(services.App)
+	appInfo = &services.App{}
 	err = appInfo.GetIndexData()
 	if err != nil {
 		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
@@ -63,7 +63,7 @@ func GetAppBase(c *gin.Context) {
 // @Success 500 {string} json "{"code":500,"data":{},"msg":"We need ID!"}"
 // @Router /api/v1/help?token={token} [get]
 func GetAppHelp(c *gin.Context) {
-	h := new(services.Help)
+	h := &services.Help{}
 	if err := h.GetAppHelp(); err != nil {
 		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 		return

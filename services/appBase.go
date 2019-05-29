@@ -1,6 +1,8 @@
 package services
 
 import (
+	"encoding/json"
+
 	"shop/models"
 	"shop/pkg/e"
 	"shop/pkg/logging"
@@ -17,23 +19,26 @@ func (b *AppBase) GetBaseKey() string {
 
 func (b *AppBase) GetAppBase(appId uint) (err error) {
 	var (
-		key   string
-		exist bool
+		key      string
+		exist    bool
+		dataByte []byte
 	)
 	key = b.GetBaseKey()
-	if exist, err = b.GetDataFromRedis(key); err != nil {
+	if dataByte, exist, err = b.getDataFromRedis(key); err != nil {
 		logging.LogError(err)
 		return
 	}
-	if !exist {
-		if b.WxApp, err = models.GetAppBase(appId); err != nil {
-			logging.LogError(err)
-			return
-		}
-		if err = b.SetDataWithKey(key, b); err != nil {
-			logging.LogError(err)
-			return
-		}
+	if exist {
+		err = json.Unmarshal(dataByte, b)
+		return
+	}
+	if b.WxApp, err = models.GetAppBase(appId); err != nil {
+		logging.LogError(err)
+		return
+	}
+	if err = b.setDataWithKey(key, b); err != nil {
+		logging.LogError(err)
+		return
 	}
 	return
 }

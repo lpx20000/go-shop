@@ -11,7 +11,7 @@ type WxappPage struct {
 }
 
 type NewItems struct {
-	Items interface{}
+	Items interface{} `json:"items"`
 }
 
 func GetPageItem() (data interface{}, err error) {
