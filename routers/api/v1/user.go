@@ -1,11 +1,9 @@
 package v1
 
 import (
-	"regexp"
 	"shop/pkg/e"
 	"shop/pkg/util"
 	"shop/services"
-	"strings"
 
 	"github.com/gin-gonic/gin/binding"
 
@@ -54,42 +52,11 @@ func UserLogin(c *gin.Context) {
 
 func GetUserDetail(c *gin.Context) {
 	var (
-		token string
-		data  map[string]interface{}
+		data map[string]interface{}
+		uid  int
 	)
-	token = c.GetString("token")
-	data = services.GetUserDetail(token)
+	uid = c.GetInt("userId")
+	data = services.GetUserDetail(uid)
+
 	util.Response(c, util.R{Code: e.SUCCESS, Data: data})
-}
-
-func GetUserAddress(c *gin.Context) {
-	var (
-		userId int
-	)
-	userId = c.GetInt("userId")
-	util.Response(c, util.R{Code: e.SUCCESS, Data: services.GetUserAddress(userId)})
-}
-
-func AddAddress(c *gin.Context) {
-	var (
-		addressInfo services.AddAddress
-		err         error
-	)
-
-	if err = c.ShouldBindWith(&addressInfo, binding.FormPost); err != nil {
-		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
-		return
-	}
-
-	if !(regexp.MustCompile(`^1[345678]{1}\d{9}$`).MatchString(strings.TrimSpace(addressInfo.Phone))) {
-		util.Response(c, util.R{Code: e.ERROR, Data: "手机号码不正确"})
-		return
-	}
-	addressInfo.UserId = c.GetInt("userId")
-	addressInfo.WxappId = c.GetString("wxappId")
-	if err = services.AddUserAddress(addressInfo); err != nil {
-		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
-		return
-	}
-	util.Response(c, util.R{Code: e.SUCCESS, Data: "添加成功"})
 }

@@ -9,12 +9,11 @@ import (
 )
 
 type AppBase struct {
-	Base
 	WxApp *models.Wxapp `json:"wxapp"`
 }
 
 func (b *AppBase) GetBaseKey() string {
-	return e.CAHCHA_APP_BASE
+	return e.CACHA_APP_BASE
 }
 
 func (b *AppBase) GetAppBase(appId uint) (err error) {
@@ -24,7 +23,7 @@ func (b *AppBase) GetAppBase(appId uint) (err error) {
 		dataByte []byte
 	)
 	key = b.GetBaseKey()
-	if dataByte, exist, err = b.getDataFromRedis(key); err != nil {
+	if dataByte, exist, err = getDataFromRedis(key); err != nil {
 		logging.LogError(err)
 		return
 	}
@@ -36,7 +35,7 @@ func (b *AppBase) GetAppBase(appId uint) (err error) {
 		logging.LogError(err)
 		return
 	}
-	if err = b.setDataWithKey(key, b); err != nil {
+	if err = setDataWithKey(key, b); err != nil {
 		logging.LogError(err)
 		return
 	}

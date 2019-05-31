@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"log"
 )
 
 type Setting struct {
@@ -30,8 +29,7 @@ func GetSettingRuleId(key string, wxappId string) (ruleId string) {
 
 	Db.Where(map[string]interface{}{"wxapp_id": wxappId, "key": key}).First(&setting)
 
-	err := json.Unmarshal([]byte(setting.Values), &values)
-	log.Println(err)
+	_ = json.Unmarshal([]byte(setting.Values), &values)
 	ruleId = values.FreightRule
 	return
 }

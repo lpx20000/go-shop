@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"shop/models"
 	"shop/pkg/util"
-	"strconv"
-	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -35,16 +33,6 @@ type AppInfo struct {
 	AppSecret string
 }
 
-type AddAddress struct {
-	UserId int     `form:"user_id" json:"user_id"`
-	WxappId string    `form:"wxapp_id"  json:"wxapp_id"`
-	Name    string `form:"name" binding:"required" json:"name"`
-	Phone   string `form:"phone" binding:"required" json:"phone"`
-	Detail  string `form:"detail" binding:"required" json:"detail"`
-	Region  string `form:"region" binding:"required" json:"region"`
-}
-
-
 var (
 	url = "https://api.weixin.qq.com/sns/jscode2session"
 )
@@ -67,53 +55,20 @@ func UserLogin(userInfo, code string, wxappId uint) (session string, userId int,
 	return
 }
 
-func GetUserDetail(token string) (data map[string]interface{}) {
+func GetUserDetail(uid int) (data map[string]interface{}) {
 	var (
-		userInfo   models.User
+		userInfo   *models.User
 		orderCount map[string]int
 	)
 	data = make(map[string]interface{})
 	orderCount = make(map[string]int)
 
-	userInfo = models.GetUserInfoByOpenId(token)
+	userInfo = models.GetUserInfoByOpenId(uid)
 
 	data["userInfo"] = userInfo
 	orderCount["payment"] = models.GetOrderCount(userInfo.UserId, "payment")
 	orderCount["received"] = models.GetOrderCount(userInfo.UserId, "received")
 	data["orderCount"] = orderCount
-	return
-}
-
-func GetUserAddress(uid int) (data map[string]interface{}) {
-	data = make(map[string]interface{})
-	data["list"] = models.GetUserAddressList(uid)
-	data["default_id"] = models.GetUserInfoByUid(uid).AddressId
-	return
-}
-
-func AddUserAddress(address AddAddress) (err error)  {
-	var (
-		region []string
-		provinceId int
-		cityId int
-		regionId int
-		userAddress models.UserAddress
-		wxappId int
-	)
-	wxappId, _ = strconv.Atoi(strings.TrimSpace(address.WxappId))
-	region = strings.Split(strings.TrimSpace(address.Region), ",")
-	provinceId = models.GetIdByRegionName(strings.TrimSpace(region[0]), 1, 0)
-	cityId = models.GetIdByRegionName(strings.TrimSpace(region[1]), 2, provinceId)
-	regionId = models.GetIdByRegionName(strings.TrimSpace(region[2]), 3, cityId)
-	userAddress.UserId = address.UserId
-	userAddress.WxappId = wxappId
-	userAddress.ProvinceId = provinceId
-	userAddress.CityId = cityId
-	userAddress.RegionId = regionId
-	userAddress.Name = address.Name
-	userAddress.Phone = address.Phone
-	userAddress.Detail = address.Detail
-	err = models.CreateUserAddress(userAddress)
 	return
 }
 

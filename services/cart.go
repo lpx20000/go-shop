@@ -4,112 +4,139 @@ import (
 	"encoding/json"
 	"fmt"
 	"shop/models"
+	"shop/pkg/e"
+	"shop/pkg/logging"
 	"shop/pkg/util"
 	"strconv"
 	"strings"
+	"time"
 )
-
-type cartList struct {
-	GoodID     uint   `json:"good_id"`
-	GoodsNum   int    `json:"goods_num"`
-	GoodsSkuID string `json:"goods_sku_id"`
-	CreateTime int    `json:"create_time"`
-}
 
 type ErrorInfo struct {
 	err    string
 	exists bool
 }
 
-func (e *ErrorInfo) setErrorInfo(err string) {
-	e.exists = true
-	e.err = err
+type UserCartList struct {
+	CartList     models.CartOrder `json:"-"`
+	Err          ErrorInfo        `json:"-"`
+	AddGoodCart  CartList         `json:"-"`
+	CartTotalNum int              `json:"cart_total_num"`
 }
 
-func (e *ErrorInfo) getErrorInfo() (err string) {
-	err = e.err
-	e.exists = false
-	e.err = ""
+type CartList struct {
+	GoodId     int    `form:"goods_id" binding:"required" json:"good_id"`
+	GoodsNum   int    `form:"goods_num" binding:"required" json:"goods_num"`
+	GoodsSkuId string `form:"goods_sku_id" binding:"required" json:"goods_sku_id"`
+	CreateTime int64  `json:"create_time"`
+}
+
+func (u *UserCartList) setErrorInfo(err string) {
+	u.Err.exists = true
+	u.Err.err = err
+}
+
+func (u *UserCartList) getErrorInfo() (err string) {
+	err = u.Err.err
+	u.Err.exists = false
+	u.Err.err = ""
 	return
 }
 
-func (e *ErrorInfo) hasError() bool {
-	return e.exists
+func (u *UserCartList) hasError() bool {
+	return u.Err.exists
 }
 
-func GetCartInfo(token string, wxappId string) (cart models.CartOrder) {
+func (u *UserCartList) getKey(uid int) string {
+	return e.CACHA_APP_CARTLIST + ":" + strconv.Itoa(uid)
+}
+
+func (u *UserCartList) GetCartInfo(wxappId string, uid int) (err error) {
 	var (
-		carts           []cartList
-		goodsId         []uint
-		goodsInfo       map[uint]models.Goods
-		userInformation models.User
+		carts           []CartList
+		goodsId         []int
+		goodsInfo       map[int]models.Goods
+		userInformation *models.User
 		cityId          int
 		existAddress    bool
 		cartList        []models.Goods
 		good            models.Goods
 		goodSku         models.GoodsSpec
-		errObject       ErrorInfo
 		inRegion        bool
 		orderTotalPrice float64
 		expressPrice    float64
 		express         []float64
 		OrderTotalNum   int
+		key             string
+		dataByte        []byte
+		exist           bool
 	)
-	cartInfo := make(map[string]string)
-	cartInfo["10002_1_3"] = "[{\"good_id\":10002,\"goods_num\":1,\"goods_sku_id\":\"1_3\",\"create_time\":1558496544}]"
+	cartList = make([]models.Goods, 0)
+	key = u.getKey(uid)
+	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+		logging.LogError(err)
+		return
+	}
 
-	_ = json.Unmarshal([]byte(cartInfo["10002_1_3"]), &carts)
+	if exist {
+		if err = json.Unmarshal(dataByte, &carts); err != nil {
+			logging.LogError(err)
+			return
+		}
+	}
 
 	for _, item := range carts {
 		OrderTotalNum += item.GoodsNum
-		goodsId = append(goodsId, item.GoodID)
+		goodsId = append(goodsId, item.GoodId)
 	}
 
-	userInformation = models.GetUserInfoByOpenId(token)
+	userInformation = models.GetUserInfoByOpenId(uid)
 	goodsInfo = getCartListByIds(goodsId)
 
 	cityId = userInformation.AddressDefault.CityId
 	existAddress = !(len(userInformation.UserAddress) == 0)
 	inRegion = true
 
-	for index, cart := range carts {
-		if goodsInfo[cart.GoodID].GoodsId == 0 {
-			carts = append(carts[:index], carts[index+1:]...)
-			continue
-		}
-		good = goodsInfo[cart.GoodID]
-		good.GoodsSkuId = cart.GoodsSkuID
-		goodSku = GetGoodsSku(cart.GoodsSkuID, good)
-		if goodSku.GoodsId == 0 {
-			carts = append(carts[:index], carts[index+1:]...)
-			continue
-		}
-		good.GoodsSku = goodSku
-		if good.GoodsStatusArray["value"] != 10 {
-			errObject.setErrorInfo(fmt.Sprintf("很抱歉，商品 [%s] 已下架", good.GoodsName))
-		}
-
-		if cart.GoodsNum > goodSku.StockNum {
-			errObject.setErrorInfo(fmt.Sprintf("很抱歉，商品 [%s] 库存不足", good.GoodsName))
-		}
-		good.GoodsPrice = float64(goodSku.GoodsPrice)
-		good.TotalNum = cart.GoodsNum
-		good.TotalPrice = util.Multiplication(good.GoodsPrice * float64(cart.GoodsNum))
-		good.GoodsTotalWeight = util.Multiplication(good.GoodsSku.GoodsWeight * float64(cart.GoodsNum))
-		inRegion = checkAddress(cityId, good.Delivery.Rule)
-		if inRegion {
-			good.ExpressPrice = good.Delivery.GetTotalFee(cityId, cart.GoodsNum, good.GoodsTotalWeight)
-		} else {
-			if existAddress {
-				errObject.setErrorInfo(fmt.Sprintf("很抱歉，您的收货地址不在商品 [%s] 的配送范围内", good.GoodsName))
+	if len(carts) > 0 {
+		for index, cart := range carts {
+			if goodsInfo[cart.GoodId].GoodsId == 0 {
+				carts = append(carts[:index], carts[index+1:]...)
+				continue
 			}
-		}
-		cartList = append(cartList, good)
-	}
-	orderTotalPrice, express = getTotalPriceAndExpress(cartList)
-	expressPrice = getTotalExpressPrice(wxappId, express)
+			good = goodsInfo[cart.GoodId]
+			good.GoodsSkuId = cart.GoodsSkuId
+			goodSku = GetGoodsSku(cart.GoodsSkuId, good)
+			if goodSku.GoodsId == 0 {
+				carts = append(carts[:index], carts[index+1:]...)
+				continue
+			}
+			good.GoodsSku = goodSku
+			if good.GoodsStatusArray["value"] != 10 {
+				u.setErrorInfo(fmt.Sprintf("很抱歉，商品 [%s] 已下架", good.GoodsName))
+			}
 
-	cart = models.CartOrder{
+			if cart.GoodsNum > goodSku.StockNum {
+				u.setErrorInfo(fmt.Sprintf("很抱歉，商品 [%s] 库存不足", good.GoodsName))
+			}
+			good.GoodsPrice = float64(goodSku.GoodsPrice)
+			good.TotalNum = cart.GoodsNum
+			good.TotalPrice = util.Multiplication(good.GoodsPrice * float64(cart.GoodsNum))
+			good.GoodsTotalWeight = util.Multiplication(good.GoodsSku.GoodsWeight * float64(cart.GoodsNum))
+			inRegion = checkAddress(cityId, good.Delivery.Rule)
+			if inRegion {
+				good.ExpressPrice = good.Delivery.GetTotalFee(cityId, cart.GoodsNum, good.GoodsTotalWeight)
+			} else {
+				if existAddress {
+					u.setErrorInfo(fmt.Sprintf("很抱歉，您的收货地址不在商品 [%s] 的配送范围内", good.GoodsName))
+				}
+			}
+			cartList = append(cartList, good)
+		}
+		orderTotalPrice, express = getTotalPriceAndExpress(cartList)
+		expressPrice = getTotalExpressPrice(wxappId, express)
+	}
+
+	u.CartList = models.CartOrder{
 		GoodList:        cartList,
 		OrderTotalNum:   OrderTotalNum,
 		OrderTotalPrice: util.Multiplication(orderTotalPrice),
@@ -118,10 +145,46 @@ func GetCartInfo(token string, wxappId string) (cart models.CartOrder) {
 		ExistAddress:    existAddress,
 		ExpressPrice:    expressPrice,
 		IntraRegion:     inRegion,
-		HasError:        errObject.hasError(),
-		ErrorMsg:        errObject.getErrorInfo(),
+		HasError:        u.hasError(),
+		ErrorMsg:        u.getErrorInfo(),
+	}
+	return
+}
+
+//cartInfo := make(map[string]string)
+//cartInfo["10002_1_3"] = "[{\"good_id\":10002,\"goods_num\":1,\"goods_sku_id\":\"1_3\",\"create_time\":1558496544}]"
+
+func (u *UserCartList) Add(uid int) (err error) {
+	var (
+		key      string
+		dataByte []byte
+		exist    bool
+		carts    []CartList
+	)
+	key = u.getKey(uid)
+	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+		logging.LogError(err)
+		return
 	}
 
+	if exist {
+		if err = json.Unmarshal(dataByte, &carts); err != nil {
+			logging.LogError(err)
+			return
+		}
+		for index, item := range carts {
+			if item.GoodId == u.AddGoodCart.GoodId {
+				carts[index].GoodsNum++
+				u.CartTotalNum = carts[index].GoodsNum
+				carts[index].CreateTime = time.Now().Unix()
+				break
+			}
+		}
+	} else {
+		u.CartTotalNum = u.AddGoodCart.GoodsNum
+		carts = append(carts, u.AddGoodCart)
+	}
+	err = setDataWithKeyWithoutExpire(key, carts)
 	return
 }
 
@@ -180,9 +243,9 @@ func checkAddress(cityId int, rules []models.DeliveryRule) (exists bool) {
 }
 
 //根据商品id集获取商品列表 (购物车列表用)
-func getCartListByIds(goodsId []uint) (goodsInfo map[uint]models.Goods) {
+func getCartListByIds(goodsId []int) (goodsInfo map[int]models.Goods) {
 	goods := models.GetGoodsInfoForCartList(goodsId)
-	goodsInfo = make(map[uint]models.Goods)
+	goodsInfo = make(map[int]models.Goods)
 	for _, item := range goods {
 		goodsInfo[item.GoodsId] = item
 	}
@@ -210,7 +273,7 @@ func GetGoodsSku(goodSkuId string, g models.Goods) (goodSkuInfo models.GoodsSpec
 	}
 	if g.SpecType == 20 {
 		attrs := strings.Split(goodSkuInfo.SpecSkuId, "_")
-		specRel := make(map[string]models.SpecRel)
+		specRel := make(map[string]*models.SpecRel)
 		goodsSpecRel, _ := GetGoodsSpecRel(g.GoodsId)
 		g.SpecRel = goodsSpecRel
 		for _, item := range goodsSpecRel {
@@ -223,41 +286,5 @@ func GetGoodsSku(goodSkuId string, g models.Goods) (goodSkuInfo models.GoodsSpec
 		}
 	}
 
-	return
-}
-
-func GetRegionInfo() (tree map[int]models.Tree) {
-	var (
-		commonList []models.CommonList
-	)
-
-	tree = make(map[int]models.Tree)
-
-	commonList = models.GetRegion()
-
-	for _, province := range commonList {
-
-		if province.Level == 1 {
-			tree[province.Id] = models.Tree{
-				CommonList: province,
-				City:       make(map[int]models.City, 0),
-			}
-
-			for _, city := range commonList {
-				if city.Level == 2 && city.Pid == province.Id {
-					tree[province.Id].City[city.Id] = models.City{
-						CommonList: city,
-						RegionInfo: make(map[int]models.CommonList, 0),
-					}
-
-					for _, region := range commonList {
-						if region.Level == 3 && region.Pid == city.Id {
-							tree[province.Id].City[city.Id].RegionInfo[region.Id] = region
-						}
-					}
-				}
-			}
-		}
-	}
 	return
 }

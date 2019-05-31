@@ -1,36 +1,73 @@
 package services
 
 import (
+	"encoding/json"
+	"fmt"
 	"math"
 	"shop/models"
+	"shop/pkg/e"
+	"shop/pkg/logging"
+	"shop/pkg/setting"
+	"strconv"
 	"strings"
+
+	"github.com/jinzhu/gorm"
 )
 
-func GetGoodDetail(goodId uint) (data map[string]interface{}, err error) {
+type GoodDetail struct {
+	Detail   *models.Goods          `json:"detail"`
+	SpecData *models.SpecAttrResult `json:"specData"`
+}
+
+func (g *GoodDetail) getKey(goodId int) string {
+	return fmt.Sprintf("%s:%d", e.CACHA_APP_GOOD, goodId)
+}
+
+func (g *GoodDetail) GetGoodDetail(goodId int) (err error) {
 	var (
-		good models.Goods
+		good     *models.Goods
+		dataByte []byte
+		key      string
+		exist    bool
 	)
-	data = make(map[string]interface{})
+	key = g.getKey(goodId)
+	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+		logging.LogTrace(err)
+		return
+	}
+	if exist {
+		if err = json.Unmarshal(dataByte, g); err != nil {
+			logging.LogTrace(err)
+		}
+		return
+	}
 	if good, err = models.GetGoodDetail(goodId); err != nil {
+		logging.LogTrace(err)
 		return
 	}
 	if good.SpecRel, err = GetGoodsSpecRel(goodId); err != nil {
+		logging.LogTrace(err)
 		return
 	}
-	data["info"] = good
-	data["specData"] = GetManySpecData(good)
+	g.Detail = good
+	g.SpecData = GetManySpecData(good)
+	if err = setDataWithKey(key, g); err != nil {
+		logging.LogTrace(err)
+	}
 	return
 }
 
-func GetGoodsSpecRel(goodId uint) (specRelAll []models.SpecRel, err error) {
-	var goodsSpecRel []models.GoodsSpecRel
+func GetGoodsSpecRel(goodId int) (specRelAll []*models.SpecRel, err error) {
+	var (
+		goodsSpecRel []*models.GoodsSpecRel
+	)
 	goodsSpecRel, err = models.GetGoodSpecRel(goodId)
 	if err != nil {
 		return
 	}
 
 	for _, v := range goodsSpecRel {
-		var spec models.SpecRel
+		spec := &models.SpecRel{}
 		spec.SpecValue = v.SpecValue
 		spec.Spec = v.Spec
 		spec.Pivot.Id = v.Id
@@ -45,9 +82,59 @@ func GetGoodsSpecRel(goodId uint) (specRelAll []models.SpecRel, err error) {
 	return
 }
 
-func GetGoodsList(page int,
-	categoryId uint, search string, sortType string, sortPrice int) (data map[string]interface{}, err error) {
+type GoodsList struct {
+	List struct {
+		Total       int            `json:"total"`
+		PerPage     int            `json:"per_page"`
+		CurrentPage int            `json:"current_page"`
+		Data        []models.Goods `json:"data"`
+		LastPage    float64        `json:"last_page"`
+	} `json:"list"`
+}
 
+type GoodsListPage struct {
+	Page       int    `json:"page"`
+	CategoryId int    `json:"category_id"`
+	SortPrice  int    `json:"sort_type"`
+	Search     string `json:"search"`
+	SortType   string `json:"sort_type"`
+}
+
+func (g *GoodsList) GetKey(page GoodsListPage) string {
+	return fmt.Sprintf("%s:%d:%d:%d:%s",
+		e.CACHA_APP_GOODList, page.CategoryId, page.Page, page.SortPrice,
+		strconv.Itoa(page.SortPrice)+strings.TrimSpace(page.Search))
+}
+
+func (g *GoodsList) GetGoodsList(page GoodsListPage) (err error) {
+	var (
+		key      string
+		exist    bool
+		dataByte []byte
+	)
+	key = g.GetKey(page)
+	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+		logging.LogError(err)
+		return
+	}
+	if exist {
+		err = json.Unmarshal(dataByte, g)
+		return
+	}
+	if err = g.GetGoodsPageList(page); err != nil {
+		logging.LogError(err)
+		return
+	}
+	if len(g.List.Data) == 0 {
+		return
+	}
+	if err = setDataWithKey(key, g); err != nil {
+		logging.LogError(err)
+	}
+	return
+}
+
+func (g *GoodsList) GetGoodsPageList(page GoodsListPage) (err error) {
 	var (
 		goods []models.Goods
 		total int
@@ -57,18 +144,18 @@ func GetGoodsList(page int,
 	MAX(goods_price) AS goods_max_price`).
 		Where(map[string]interface{}{
 			"is_delete": 0, "goods_status": models.ON_SALES,
-			"category_id": categoryId,
+			"category_id": page.CategoryId,
 		}).
 		Preload("Category").
 		Preload("GoodsSpec").
 		Preload("GoodsImage").
 		Joins(`left join yoshop_goods_spec  on yoshop_goods.goods_id = yoshop_goods_spec.goods_id`)
 
-	if len(strings.Trim(search, "")) > 0 {
-		query = query.Where("goods_name LIKE ?", "%"+search+"%")
+	if len(strings.Trim(page.Search, "")) > 0 {
+		query = query.Where("goods_name LIKE ?", "%"+page.Search+"%")
 	}
 
-	switch sortType {
+	switch page.SortType {
 	case "all":
 		query = query.Order("goods_sort DESC").
 			Order("goods_id DESC")
@@ -77,7 +164,7 @@ func GetGoodsList(page int,
 	case "price":
 		order := "goods_min_price DESC"
 
-		if sortPrice > 0 {
+		if page.SortPrice > 0 {
 			order = "goods_max_price DESC "
 		}
 
@@ -85,25 +172,29 @@ func GetGoodsList(page int,
 	}
 
 	query.Count(&total)
-	data = make(map[string]interface{})
 
-	err = query.Offset(models.PER_PAGE * (page - 1)).Limit(models.PER_PAGE).Find(&goods).Error
+	err = query.Offset(setting.AppSetting.PageSize * (page.Page - 1)).
+		Limit(setting.AppSetting.PageSize).
+		Find(&goods).Error
 
-	data["total"] = total
-	data["per_page"] = models.PER_PAGE
-	data["current_page"] = page
-	data["last_page"] = math.Ceil(float64(total) / float64(models.PER_PAGE))
-	data["data"] = goods
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return
+	}
 
+	g.List.Data = goods
+	g.List.CurrentPage = page.Page
+	g.List.PerPage = setting.AppSetting.PageSize
+	g.List.Total = total
+	g.List.LastPage = math.Ceil(float64(total) / float64(models.PER_PAGE))
 	return
 }
 
-func GetManySpecData(g models.Goods) (specAttrResult models.SpecAttrResult) {
+func GetManySpecData(g *models.Goods) (specAttrResult *models.SpecAttrResult) {
 	if g.SpecType == models.SINGLE_SPEC || len(g.SpecRel) == 0 || len(g.GoodsSpec) == 0 {
 		return
 	}
 	specAttrData := make(map[uint]models.SpecAttrData)
-
+	specAttrResult = &models.SpecAttrResult{}
 	for _, specRel := range g.SpecRel {
 		temp := specAttrData[specRel.SpecId]
 		if temp.GroupId == 0 {

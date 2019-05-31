@@ -9,12 +9,11 @@ import (
 )
 
 type Help struct {
-	Base
 	List []*models.WxappHelp `json:"list"`
 }
 
 func (h Help) getHelpKey() string {
-	return e.CAHCHA_APP_HELP
+	return e.CACHA_APP_HELP
 }
 
 func (h *Help) GetAppHelp() (err error) {
@@ -24,7 +23,7 @@ func (h *Help) GetAppHelp() (err error) {
 		dataByte []byte
 	)
 	key = h.getHelpKey()
-	if dataByte, exist, err = h.getDataFromRedis(key); err != nil {
+	if dataByte, exist, err = getDataFromRedis(key); err != nil {
 		logging.LogError(err)
 		return
 	}
@@ -36,9 +35,8 @@ func (h *Help) GetAppHelp() (err error) {
 		logging.LogError(err)
 		return
 	}
-	if err = h.setDataWithKey(key, h); err != nil {
+	if err = setDataWithKey(key, h); err != nil {
 		logging.LogError(err)
-		return
 	}
 	return
 }

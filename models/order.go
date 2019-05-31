@@ -26,7 +26,7 @@ type Order struct {
 }
 
 type CartOrder struct {
-	GoodList        []Goods     `json:"good_list"`
+	GoodList        []Goods     `json:"goods_list"`
 	OrderTotalNum   int         `json:"order_total_num"`
 	OrderTotalPrice float64     `json:"order_total_price"`
 	OrderPayPrice   float64     `json:"order_pay_price"`
@@ -105,7 +105,7 @@ func GetOrderCount(userId int, filter string) (count int) {
 		filters["receipt_status"] = 10
 	}
 
-	Db.Where(&Order{UserId: userId}).
+	Db.Model(&Order{}).Where(&Order{UserId: userId}).
 		Preload("GoodsImage").
 		Not("order_status", 20).
 		Order("create_time DESC").

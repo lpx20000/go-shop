@@ -8,7 +8,6 @@ import (
 )
 
 type App struct {
-	Base
 	Items  interface{}     `json:"items"`
 	Newest []*models.Goods `json:"newest"`
 	Best   []*models.Goods `json:"best"`
@@ -19,7 +18,7 @@ func (a *App) GetItemKey() string {
 }
 
 func (a *App) getIndexKey() string {
-	return e.CAHCHE_APP_INDEX
+	return e.CACHE_APP_INDEX
 }
 
 func (a *App) GetIndexData() (err error) {
@@ -29,7 +28,7 @@ func (a *App) GetIndexData() (err error) {
 		dataByte []byte
 	)
 	key = a.getIndexKey()
-	if dataByte, exist, err = a.getDataFromRedis(key); err != nil {
+	if dataByte, exist, err = getDataFromRedis(key); err != nil {
 		return
 	}
 
@@ -46,6 +45,6 @@ func (a *App) GetIndexData() (err error) {
 	if a.Best, err = models.GetIndexBestGoods(); err != nil {
 		return
 	}
-	err = a.setDataWithKey(key, a)
+	err = setDataWithKey(key, a)
 	return
 }

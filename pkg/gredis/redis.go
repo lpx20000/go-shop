@@ -59,8 +59,10 @@ func Set(key string, data interface{}, time int) (err error) {
 			return err
 		}
 
-		if _, err = conn.Do("EXPIRE", key, time); err != nil {
-			return err
+		if time > 0 {
+			if _, err = conn.Do("EXPIRE", key, time); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

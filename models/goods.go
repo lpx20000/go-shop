@@ -13,7 +13,7 @@ const (
 )
 
 type Goods struct {
-	GoodsId          uint                   `gorm:"AUTO_INCREMENT,primary_key" json:"goods_id"`
+	GoodsId          int                    `gorm:"AUTO_INCREMENT,primary_key" json:"goods_id"`
 	GoodsName        string                 `json:"goods_name"`
 	CategoryId       uint                   `json:"category_id"`
 	GoodsSales       uint                   `json:"goods_sales"`
@@ -40,9 +40,9 @@ type Goods struct {
 	Category         Category               `gorm:"foreignkey:CategoryId;association_foreignkey:CategoryId" json:"category,omitempty" ` //belongsTo
 	GoodsSpec        []GoodsSpec            `gorm:"foreignkey:GoodsId;association_foreignkey:GoodsId" json:"spec,omitempty" `           //hasMany
 	GoodsImage       []GoodsImage           `gorm:"foreignkey:GoodsId;association_foreignkey:GoodsId" json:"image,omitempty" `          //hasMany
-	GoodsSpecRel     []GoodsSpecRel         `gorm:"foreignkey:GoodsId;association_foreignkey:GoodsId" json:"-,omitempty" `              //belongsToMany
+	GoodsSpecRel     []GoodsSpecRel         `gorm:"foreignkey:GoodsId;association_foreignkey:GoodsId" json:"-" `                        //belongsToMany
 	Delivery         Delivery               `gorm:"foreignkey:DeliveryId;association_foreignkey:DeliveryId" json:"delivery,omitempty" ` //belongsTo
-	SpecRel          []SpecRel              `json:"spec_rel,omitempty"`
+	SpecRel          []*SpecRel             `json:"spec_rel,omitempty"`
 }
 
 func (g *Goods) AfterFind() error {
@@ -57,7 +57,7 @@ func (g *Goods) AfterFind() error {
 	return nil
 }
 
-func GetGoodsInfoForCartList(goodsId []uint) (goods []Goods) {
+func GetGoodsInfoForCartList(goodsId []int) (goods []Goods) {
 	Db.Where(&Goods{IsDelete: 0}).Where("goods_id in (?)", goodsId).
 		Preload("Category").
 		Preload("GoodsSpec").
@@ -70,7 +70,11 @@ func GetGoodsInfoForCartList(goodsId []uint) (goods []Goods) {
 	return
 }
 
-func GetGoodDetail(goodId uint) (goods Goods, err error) {
+func GetGoodDetail(goodId int) (*Goods, error) {
+	var (
+		goods Goods
+		err   error
+	)
 	err = Db.Where(map[string]interface{}{
 		"is_delete": 0, "goods_status": ON_SALES,
 		"goods_id": goodId,
@@ -83,7 +87,10 @@ func GetGoodDetail(goodId uint) (goods Goods, err error) {
 		Order("goods_id DESC").
 		Order("goods_sort ASC").
 		First(&goods).Error
-	return
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return &goods, nil
 }
 
 func GetIndexBestGoods() ([]*Goods, error) {

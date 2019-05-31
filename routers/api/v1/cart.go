@@ -5,6 +5,8 @@ import (
 	"shop/pkg/util"
 	"shop/services"
 
+	"github.com/gin-gonic/gin/binding"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,20 +18,36 @@ import (
 // @Success 500 {string} json "{"code":500,"data":{},"msg":"We need ID!"}"
 // @Router /api/v1/list?wxapp_id={id} [get]
 func GetCartList(c *gin.Context) {
-	var (
-		token   string
-		wxappId string
-	)
-
-	token = c.GetString("token")
-	wxappId = c.GetString("wxappId")
-	data := services.GetCartInfo(token, wxappId)
-
-	util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+	wxappId := c.GetString("wxappId")
+	uid := c.GetInt("userId")
+	cartList := &services.UserCartList{}
+	if err := cartList.GetCartInfo(wxappId, uid); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+	}
+	util.Response(c, util.R{Code: e.SUCCESS, Data: cartList.CartList})
 }
 
 func GetCartAddress(c *gin.Context) {
 	data := make(map[string]interface{})
 	//data["all"], data["tree"] = services.GetRegionInfo()
 	util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+}
+
+func AddCart(c *gin.Context) {
+	var (
+		cart services.UserCartList
+		err  error
+	)
+
+	if err = c.ShouldBindWith(&cart.AddGoodCart, binding.FormPost); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		return
+	}
+
+	if err = cart.Add(c.GetInt("userId")); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		return
+	}
+	util.Response(c, util.R{Code: e.SUCCESS, Data: cart})
+	return
 }

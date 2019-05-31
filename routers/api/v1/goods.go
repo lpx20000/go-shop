@@ -9,15 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Detail struct {
-	GoodId uint `form:"good_id" binding:"required"`
+type Good struct {
+	GoodId int `form:"goods_id" binding:"required" json:"goods_id"`
 }
 
 type List struct {
 	Page       int    `form:"page"`
 	SortType   string `form:"sortType" binding:"required"`
 	SortPrice  int    `form:"sortPrice"`
-	CategoryId uint   `form:"category_id" binding:"required"`
+	CategoryId int    `form:"category_id" binding:"required"`
 	Search     string `form:"search"`
 }
 
@@ -29,21 +29,21 @@ type List struct {
 // @Success 500 {string} json "{"code":500,"data":{},"msg":"We need ID!"}"
 // @Router /api/v1/detail?wxapp_id={id} [get]
 func GetGoodDetail(c *gin.Context) {
-	var detail Detail
-	data := make(map[string]interface{})
-
-	if c.ShouldBindQuery(&detail) != nil {
-		util.Response(c, util.R{Code: e.ERROR, Data: data})
+	var (
+		good       Good
+		err        error
+		goodDetail *services.GoodDetail
+	)
+	if err = c.ShouldBindQuery(&good); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 		return
 	}
-	var err error
-
-	if info, err := services.GetGoodDetail(detail.GoodId); err == nil {
-		util.Response(c, util.R{Code: e.SUCCESS, Data: info})
+	goodDetail = &services.GoodDetail{}
+	if err = goodDetail.GetGoodDetail(good.GoodId); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 		return
 	}
-	data["detail"] = err
-	util.Response(c, util.R{Code: e.ERROR, Data: data})
+	util.Response(c, util.R{Code: e.SUCCESS, Data: goodDetail})
 }
 
 // @Summary 获取小程序商品分类
@@ -59,31 +59,36 @@ func GetGoodDetail(c *gin.Context) {
 // @Router /api/v1/list?wxapp_id={id} [get]
 func GetGoodList(c *gin.Context) {
 	var (
-		list List
-		err  error
-		page int
+		list     List
+		pageInfo services.GoodsListPage
 	)
-	data := make(map[string]interface{})
+
 	if err := c.ShouldBindQuery(&list); err != nil {
 		util.Response(c, util.R{Code: e.ERROR, Data: err})
 		return
 	}
 
-	models.Host = c.Request.Host
-
-	page = 1
-
-	if list.Page > 1 {
-		page = list.Page
+	if list.Page == 0 {
+		list.Page = 1
 	}
 
-	info, err := services.GetGoodsList(page,
-		list.CategoryId, list.Search, list.SortType, list.SortPrice)
-	if err == nil {
-		data["list"] = info
-		util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+	models.Host = c.Request.Host
+	pageInfo = services.GoodsListPage{
+		Page:       list.Page,
+		CategoryId: list.CategoryId,
+		SortPrice:  list.SortPrice,
+		Search:     list.Search,
+		SortType:   list.SortType,
+	}
+
+	if pageInfo.Page > 1 {
+		pageInfo.Page = list.Page
+	}
+
+	h := &services.GoodsList{}
+	if err := h.GetGoodsList(pageInfo); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 		return
 	}
-	data["list"] = err.Error()
-	util.Response(c, util.R{Code: e.ERROR, Data: data})
+	util.Response(c, util.R{Code: e.SUCCESS, Data: h})
 }

@@ -3,18 +3,21 @@ package models
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 type User struct {
-	UserId         int    `gorm:"AUTO_INCREMENT"`
+	UserId         int    `gorm:"AUTO_INCREMENT" json:"user_id"`
 	OpenId         string `json:"-"`
 	NickName       string `gorm:"column:nickName"`
 	AvatarUrl      string `gorm:"column:avatarUrl"`
 	Gender         uint8
-	Country        string
-	Province       string
-	City           string
-	AddressId      uint
+	GenderString   string        `json:"gender"`
+	Country        string        `json:"country"`
+	Province       string        `json:"province"`
+	City           string        `json:"city"`
+	AddressId      int           `json:"address_id"`
 	WxappId        uint          `json:"-"`
 	CreateTime     int64         `json:"-"`
 	UpdateTime     int64         `json:"-"`
@@ -32,14 +35,13 @@ type RegisterUser struct {
 	AvatarUrl string `json:"avatarUrl"`
 }
 
-func GetUserInfoByOpenId(token interface{}) (userInfo User) {
-	Db.Where(map[string]interface{}{
-		"open_id": token,
-	}).
+func GetUserInfoByOpenId(uid int) *User {
+	var userInfo User
+	Db.Where(&User{UserId: uid}).
 		Preload("UserAddress").
 		Preload("AddressDefault").
 		First(&userInfo)
-	return
+	return &userInfo
 }
 
 func Register(userInfo string, wxappId uint, openId string) (userId int, err error) {
@@ -66,26 +68,24 @@ func Register(userInfo string, wxappId uint, openId string) (userId int, err err
 	return
 }
 
-func (u *User) AfterFind() error {
-	var (
-		all        map[int]CommonList
-		commonList []CommonList
-	)
+func (u *User) AfterFind() (err error) {
 	if u.AddressDefault.UserId > 0 {
-		u.AddressDefault.RegionInfo = GetRegionInfo(u.AddressDefault.ProvinceId, u.AddressDefault.CityId, u.AddressDefault.RegionId)
+		u.AddressDefault.RegionInfo, err = GetRegionInfo(u.AddressDefault.ProvinceId, u.AddressDefault.RegionId, u.AddressDefault.CityId)
+		if err != nil {
+			return
+		}
+		if u.Gender == 1 {
+			u.GenderString = "男"
+		} else {
+			u.GenderString = "女"
+		}
 	}
 
 	if len(u.UserAddress) > 0 {
-		all = make(map[int]CommonList)
-		commonList = GetRegion()
-		for _, item := range commonList {
-			all[item.Id] = item
-		}
 		for index, address := range u.UserAddress {
-			u.UserAddress[index].RegionInfo = RegionInfo{
-				Province: all[address.ProvinceId].Name,
-				City:     all[address.CityId].Name,
-				Region:   all[address.RegionId].Name,
+			u.UserAddress[index].RegionInfo, err = GetRegionInfo(address.ProvinceId, address.RegionId, address.CityId)
+			if err != nil {
+				return
 			}
 		}
 	}
@@ -100,7 +100,15 @@ func GetUserIdByToken(token string) (uid int) {
 	return
 }
 
-func GetUserInfoByUid(uid int) (userInfo User) {
-	Db.Where(&User{UserId: uid}).Select("user_id, address_id").First(&userInfo)
+func GetUserInfoByUid(uid int) (userInfo User, err error) {
+	err = Db.Where(&User{UserId: uid}).First(&userInfo).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return
+	}
+	return
+}
+
+func UpdateDefaultAddressId(uid, addressId int) (err error) {
+	err = Db.Model(&User{}).Where(&User{UserId: uid}).Update("address_id", addressId).Error
 	return
 }

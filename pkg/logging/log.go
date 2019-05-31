@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime/debug"
 	"shop/pkg/setting"
 	"time"
 
@@ -68,6 +69,6 @@ func LogInfo(args ...interface{}) {
 	Logger.Info(args)
 }
 
-func LogTrace(args ...interface{}) {
-	Logger.Trace(args)
+func LogTrace(err error) {
+	Logger.WithField("stack", string(debug.Stack())).Error(err)
 }

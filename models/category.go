@@ -2,10 +2,12 @@ package models
 
 import (
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
-type Categories []Category
-type CategoriesWithChild []CategoryWithChild
+type Categories []*Category
+type CategoriesWithChild []*CategoryWithChild
 
 type Category struct {
 	CategoryId       uint       `json:"category_id"`
@@ -20,8 +22,8 @@ type Category struct {
 }
 
 type CategoryWithChild struct {
-	Category
-	Child []Category `json:"child"`
+	*Category
+	Child []*Category `json:"child"`
 }
 
 func (c *Category) AfterFind() error {
@@ -53,9 +55,16 @@ func (c CategoriesWithChild) Less(i, j int) bool {
 	return c[i].Sort < c[j].Sort
 }
 
-func GetCategoryInfo() (category []Category, err error) {
+func GetCategoryInfo() ([]*Category, error) {
+	var (
+		category []*Category
+		err      error
+	)
 	err = Db.Preload("Image").
 		Order("sort ASC").
 		Find(&category).Error
-	return
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return category, nil
 }

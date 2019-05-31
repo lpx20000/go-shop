@@ -1,20 +1,24 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/jinzhu/gorm"
+)
 
 type GoodsSpecRel struct {
 	GoodsSpecRefer
-	GoodsId   uint      `json:"goods_id"`
+	GoodsId   int       `json:"goods_id"`
 	Spec      Spec      `gorm:"foreignkey:SpecId;association_foreignkey:SpecId" json:"spec" `                 //belongsTo
 	SpecValue SpecValue `gorm:"foreignkey:SpecValueId;association_foreignkey:SpecValueId" json:"spec_value" ` //belongsTo
 }
 
 type GoodsSpecRefer struct {
 	Id              uint   `json:"id"`
-	GoodsId         uint   `json:"goods_id"`
-	SpecId          uint   `json:"spec_id"`
-	SpecValueId     uint   `json:"spect_value_id"`
-	WxappId         uint   `json:"-"`
+	GoodsId         int    `json:"goods_id"`
+	SpecId          int    `json:"spec_id"`
+	SpecValueId     int    `json:"spect_value_id"`
+	WxappId         int    `json:"-"`
 	CreateTime      int64  `json:"-"`
 	CreateTimeStamp string `json:"create_time"`
 }
@@ -32,11 +36,18 @@ func (g *GoodsSpecRel) AfterFind() error {
 	return nil
 }
 
-func GetGoodSpecRel(goodId uint) (goodsSpecRel []GoodsSpecRel, err error) {
+func GetGoodSpecRel(goodId int) ([]*GoodsSpecRel, error) {
+	var (
+		goodsSpecRel []*GoodsSpecRel
+		err          error
+	)
 	err = Db.Model(&GoodsSpecRel{}).
 		Where(&GoodsSpecRel{GoodsId: goodId}).
 		Preload("Spec").
 		Preload("SpecValue").
 		Find(&goodsSpecRel).Error
-	return
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return goodsSpecRel, nil
 }

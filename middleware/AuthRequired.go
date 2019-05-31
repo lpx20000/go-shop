@@ -4,6 +4,7 @@ import (
 	"shop/models"
 	"shop/pkg/e"
 	"shop/pkg/util"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,14 +18,14 @@ func Auth() gin.HandlerFunc {
 		)
 
 		if c.Request.Method == "GET" {
-			token = c.Query("token")
-			wxappId = c.Query("wxapp_id")
+			token = strings.TrimSpace(c.Query("token"))
+			wxappId = strings.TrimSpace(c.Query("wxapp_id"))
 		} else if c.Request.Method == "POST" {
-			token = c.Request.FormValue("token")
-			wxappId = c.Request.FormValue("wxapp_id")
+			token = strings.TrimSpace(c.Request.FormValue("token"))
+			wxappId = strings.TrimSpace(c.Request.FormValue("wxapp_id"))
 		}
 
-		if len(token) == 0 {
+		if len(token) == 0 || len(wxappId) == 0 {
 			util.Response(c, util.R{Code: e.ERROR, Data: e.GetMsg(e.ERROR_AUTH_TOKEN)})
 			c.Abort()
 			return
@@ -38,6 +39,7 @@ func Auth() gin.HandlerFunc {
 		var userId int
 		userId = models.GetUserIdByToken(session.OpenId)
 		c.Set(token, session.OpenId)
+		c.Set("token", session.OpenId)
 		c.Set("userId", userId)
 		c.Set("wxappId", wxappId)
 		c.Next()

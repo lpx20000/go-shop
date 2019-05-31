@@ -37,7 +37,14 @@ func InitRouter() *gin.Engine {
 		apia1.GET("/category", v1.GetGoodCategory)
 		apia1.GET("/list", v1.GetGoodList)
 		apia1.GET("/cart", v1.GetCartList)
+		apia1.POST("/AddCart", v1.AddCart)
+
+		//待缓存
 		apia1.GET("/userDetail", v1.GetUserDetail)
+		apia1.POST("/setAddress", v1.SetDefaultAddress)
+		apia1.POST("/deleteAddress", v1.DeleteAddress)
+		apia1.GET("/addressDetail", v1.GetAddressDetail)
+		apia1.POST("/editAddress", v1.EditAddress)
 		apia1.GET("/orderAllList", v1.GetOrderList)
 		apia1.GET("/address", v1.GetCartAddress)
 	}

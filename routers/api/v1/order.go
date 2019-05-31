@@ -23,7 +23,6 @@ func GetOrderList(c *gin.Context) {
 		userId    int
 	)
 	if err := c.ShouldBindQuery(&orderType); err != nil {
-		logging.LogError(err.Error())
 		util.Response(c, util.R{Code: -1, Data: err.Error()})
 		return
 	}

@@ -49,12 +49,12 @@ func GetAppBase(c *gin.Context) {
 		util.Response(c, util.R{Code: e.ERROR, Data: e.GetMsg(e.ERROR_NOT_EXIST_PARAM)})
 		return
 	}
-	appBase = new(services.AppBase)
+	appBase = &services.AppBase{}
 	if err = appBase.GetAppBase(app.WxappID); err != nil {
 		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 		return
 	}
-	util.Response(c, util.R{Code: e.ERROR, Data: appBase})
+	util.Response(c, util.R{Code: e.SUCCESS, Data: appBase})
 }
 
 // @Summary 获取小程序帮助
@@ -68,5 +68,5 @@ func GetAppHelp(c *gin.Context) {
 		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 		return
 	}
-	util.Response(c, util.R{Code: e.ERROR, Data: h})
+	util.Response(c, util.R{Code: e.SUCCESS, Data: h})
 }
