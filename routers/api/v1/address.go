@@ -37,7 +37,7 @@ func AddAddress(c *gin.Context) {
 		return
 	}
 	address = &services.Address{}
-	addAddress.UserId = c.GetInt("userId")
+	address.UserId = c.GetInt("userId")
 	address.AddAddress = addAddress
 	address.AddAddress.WxappId = c.GetString("wxappId")
 	if err = address.ModifyUserAddress(services.CREATE); err != nil {

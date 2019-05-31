@@ -147,7 +147,7 @@ func (a *Address) ModifyUserAddress(action string) (err error) {
 		}
 	}
 
-	key = a.getKey(uid)
+	key = a.getKey(a.UserId)
 	if _, err = deleteCache(key); err != nil {
 		logging.LogError(err)
 	}
@@ -162,7 +162,7 @@ func (a *Address) createAddress(regionInfo map[string]int) (err error) {
 	)
 	wxappId, _ = strconv.Atoi(strings.TrimSpace(a.AddAddress.WxappId))
 	region = strings.Split(strings.TrimSpace(a.AddAddress.Region), ",")
-	userAddress.UserId = a.AddAddress.UserId
+	userAddress.UserId = a.UserId
 	userAddress.WxappId = wxappId
 	userAddress.ProvinceId = regionInfo[fmt.Sprintf("%s:%d:%d", strings.TrimSpace(region[0]), 1, 0)]
 	userAddress.CityId = regionInfo[fmt.Sprintf("%s:%d:%d", strings.TrimSpace(region[1]), 2, userAddress.ProvinceId)]
