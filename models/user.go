@@ -12,8 +12,7 @@ type User struct {
 	OpenId         string `json:"-"`
 	NickName       string `gorm:"column:nickName"`
 	AvatarUrl      string `gorm:"column:avatarUrl"`
-	Gender         uint8
-	GenderString   string        `json:"gender"`
+	Gender         interface{}
 	Country        string        `json:"country"`
 	Province       string        `json:"province"`
 	City           string        `json:"city"`
@@ -75,9 +74,9 @@ func (u *User) AfterFind() (err error) {
 			return
 		}
 		if u.Gender == 1 {
-			u.GenderString = "男"
+			u.Gender = "男"
 		} else {
-			u.GenderString = "女"
+			u.Gender = "女"
 		}
 	}
 

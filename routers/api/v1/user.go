@@ -34,14 +34,14 @@ func UserLogin(c *gin.Context) {
 
 	data := make(map[string]interface{})
 	if err = c.ShouldBindWith(&user, binding.FormPost); err != nil {
-		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		util.Response(c, util.R{Code: e.FAIL, Data: err.Error()})
 		return
 	}
 
 	token, userId, err = services.UserLogin(user.UserInfo, user.Code, user.WxappId)
 
 	if err != nil {
-		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		util.Response(c, util.R{Code: e.FAIL, Data: err.Error()})
 		return
 	}
 

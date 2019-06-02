@@ -12,32 +12,34 @@ import (
 var RedisConn *redis.Pool
 
 func SetUp() {
-	RedisConn = &redis.Pool{
-		MaxIdle:     setting.RedisSetting.MaxIdle,
-		MaxActive:   setting.RedisSetting.MaxActive,
-		IdleTimeout: setting.RedisSetting.IdleTimeout,
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", setting.RedisSetting.Host)
-			if err != nil {
-				logging.LogFatal(err.Error())
-				return nil, err
-			}
-			if setting.RedisSetting.Password != "" {
-				if _, err := c.Do("AUTH", setting.RedisSetting.Password); err != nil {
-					_ = c.Close()
+	if setting.RedisSetting.RedisOpen {
+		RedisConn = &redis.Pool{
+			MaxIdle:     setting.RedisSetting.MaxIdle,
+			MaxActive:   setting.RedisSetting.MaxActive,
+			IdleTimeout: setting.RedisSetting.IdleTimeout,
+			Dial: func() (redis.Conn, error) {
+				c, err := redis.Dial("tcp", setting.RedisSetting.Host)
+				if err != nil {
 					logging.LogFatal(err.Error())
 					return nil, err
 				}
-			}
-			return c, err
-		},
-		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			if _, err := c.Do("PING"); err != nil {
-				logging.LogFatal(err.Error())
-				return err
-			}
-			return nil
-		},
+				if setting.RedisSetting.Password != "" {
+					if _, err := c.Do("AUTH", setting.RedisSetting.Password); err != nil {
+						_ = c.Close()
+						logging.LogFatal(err.Error())
+						return nil, err
+					}
+				}
+				return c, err
+			},
+			TestOnBorrow: func(c redis.Conn, t time.Time) error {
+				if _, err := c.Do("PING"); err != nil {
+					logging.LogFatal(err.Error())
+					return err
+				}
+				return nil
+			},
+		}
 	}
 }
 

@@ -147,7 +147,7 @@ func (a *Address) ModifyUserAddress(action string) (err error) {
 		}
 	}
 
-	key = a.getKey(uid)
+	key = a.getKey(a.UserId)
 	if _, err = deleteCache(key); err != nil {
 		logging.LogError(err)
 	}
