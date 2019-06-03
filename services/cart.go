@@ -18,13 +18,21 @@ type ErrorInfo struct {
 }
 
 type UserCartList struct {
-	CartList     models.CartOrder `json:"-"`
-	Err          ErrorInfo        `json:"-"`
-	AddGoodCart  CartList         `json:"-"`
-	CartTotalNum int              `json:"cart_total_num"`
+	CartList     models.CartOrder       `json:"-"`
+	Err          ErrorInfo              `json:"-"`
+	AddGoodCart  AddCartList            `json:"-"`
+	SubCartList  SubCartList            `json:"-"`
+	CartTotalNum int                    `json:"cart_total_num"`
+	UserListCart map[string]AddCartList `json:"-"`
 }
 
-type CartList struct {
+type SubCartList struct {
+	GoodId     int    `form:"goods_id" binding:"required" json:"good_id"`
+	GoodsSkuId string `form:"goods_sku_id" binding:"required" json:"goods_sku_id"`
+	CreateTime int64  `json:"create_time"`
+}
+
+type AddCartList struct {
 	GoodId     int    `form:"goods_id" binding:"required" json:"good_id"`
 	GoodsNum   int    `form:"goods_num" binding:"required" json:"goods_num"`
 	GoodsSkuId string `form:"goods_sku_id" binding:"required" json:"goods_sku_id"`
@@ -53,7 +61,7 @@ func (u *UserCartList) getKey(uid int) string {
 
 func (u *UserCartList) GetCartInfo(wxappId string, uid int) (err error) {
 	var (
-		carts           []CartList
+		carts           map[string]AddCartList
 		goodsId         []int
 		goodsInfo       map[int]models.Goods
 		userInformation *models.User
@@ -68,23 +76,15 @@ func (u *UserCartList) GetCartInfo(wxappId string, uid int) (err error) {
 		express         []float64
 		OrderTotalNum   int
 		key             string
-		dataByte        []byte
-		exist           bool
 	)
 	cartList = make([]models.Goods, 0)
+
 	key = u.getKey(uid)
-	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+	if err = u.getCacheData(key); err != nil {
 		logging.LogError(err)
 		return
 	}
-
-	if exist {
-		if err = json.Unmarshal(dataByte, &carts); err != nil {
-			logging.LogError(err)
-			return
-		}
-	}
-
+	carts = u.UserListCart
 	for _, item := range carts {
 		OrderTotalNum += item.GoodsNum
 		goodsId = append(goodsId, item.GoodId)
@@ -100,14 +100,16 @@ func (u *UserCartList) GetCartInfo(wxappId string, uid int) (err error) {
 	if len(carts) > 0 {
 		for index, cart := range carts {
 			if goodsInfo[cart.GoodId].GoodsId == 0 {
-				carts = append(carts[:index], carts[index+1:]...)
+				delete(carts, index)
+				_ = u.deleteSpecifyKey(key, index)
 				continue
 			}
 			good = goodsInfo[cart.GoodId]
 			good.GoodsSkuId = cart.GoodsSkuId
 			goodSku = GetGoodsSku(cart.GoodsSkuId, good)
 			if goodSku.GoodsId == 0 {
-				carts = append(carts[:index], carts[index+1:]...)
+				delete(carts, index)
+				_ = u.deleteSpecifyKey(key, index)
 				continue
 			}
 			good.GoodsSku = goodSku
@@ -151,41 +153,98 @@ func (u *UserCartList) GetCartInfo(wxappId string, uid int) (err error) {
 	return
 }
 
-//cartInfo := make(map[string]string)
-//cartInfo["10002_1_3"] = "[{\"good_id\":10002,\"goods_num\":1,\"goods_sku_id\":\"1_3\",\"create_time\":1558496544}]"
-
 func (u *UserCartList) Add(uid int) (err error) {
 	var (
-		key      string
-		dataByte []byte
-		exist    bool
-		carts    []CartList
+		key   string
+		carts map[string]AddCartList
 	)
+
 	key = u.getKey(uid)
-	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+	if err = u.getCacheData(key); err != nil {
 		logging.LogError(err)
 		return
 	}
 
-	if exist {
-		if err = json.Unmarshal(dataByte, &carts); err != nil {
-			logging.LogError(err)
-			return
-		}
-		for index, item := range carts {
-			if item.GoodId == u.AddGoodCart.GoodId {
-				carts[index].GoodsNum++
-				u.CartTotalNum = carts[index].GoodsNum
-				carts[index].CreateTime = time.Now().Unix()
-				break
-			}
-		}
-	} else {
+	if len(u.UserListCart) == 0 {
+		carts = make(map[string]AddCartList)
+		u.AddGoodCart.CreateTime = time.Now().Unix()
 		u.CartTotalNum = u.AddGoodCart.GoodsNum
-		carts = append(carts, u.AddGoodCart)
+		carts[fmt.Sprintf("%d_%s", u.AddGoodCart.GoodId, u.AddGoodCart.GoodsSkuId)] = u.AddGoodCart
+	} else {
+		carts = u.UserListCart
+		for index, item := range carts {
+			if fmt.Sprintf("%d_%s", u.AddGoodCart.GoodId, u.AddGoodCart.GoodsSkuId) == index {
+				carts[index] = AddCartList{
+					GoodsSkuId: item.GoodsSkuId,
+					GoodsNum:   item.GoodsNum + u.AddGoodCart.GoodsNum,
+					GoodId:     item.GoodId,
+					CreateTime: time.Now().Unix(),
+				}
+				u.CartTotalNum += u.AddGoodCart.GoodsNum
+			}
+			u.CartTotalNum += item.GoodsNum
+		}
 	}
-	err = setDataWithKeyWithoutExpire(key, carts)
+	err = setWithoutExpire(key, carts)
 	return
+}
+
+func (u *UserCartList) Sub(uid int) (err error) {
+	key := u.getKey(uid)
+	if err = u.getCacheData(key); err != nil {
+		logging.LogError(err)
+		return
+	}
+	for index, item := range u.UserListCart {
+		if index == fmt.Sprintf("%d_%s", u.SubCartList.GoodId, u.SubCartList.GoodsSkuId) {
+			item.GoodsNum--
+			u.UserListCart[index] = AddCartList{
+				GoodsSkuId: item.GoodsSkuId,
+				GoodsNum:   item.GoodsNum,
+				GoodId:     item.GoodId,
+				CreateTime: time.Now().Unix(),
+			}
+			u.CartTotalNum += item.GoodsNum
+			continue
+		}
+		u.CartTotalNum += item.GoodsNum
+	}
+	key = u.getKey(uid)
+	err = setWithoutExpire(key, u.UserListCart)
+	return
+}
+
+func (u *UserCartList) Delete(uid int) error {
+	return u.deleteSpecifyKey(u.getKey(uid), fmt.Sprintf("%d_%s", u.SubCartList.GoodId, u.SubCartList.GoodsSkuId))
+}
+
+func (u *UserCartList) getCacheData(key string) error {
+	var (
+		dataByte []byte
+		exist    bool
+		err      error
+	)
+	if dataByte, exist, err = get(key); err != nil {
+		return err
+	}
+
+	if exist {
+		if err = json.Unmarshal(dataByte, &u.UserListCart); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (u *UserCartList) deleteSpecifyKey(key, index string) error {
+	if err := u.getCacheData(key); err != nil {
+		return err
+	}
+	if len(u.UserListCart) == 0 {
+		return nil
+	}
+	delete(u.UserListCart, index)
+	return setWithoutExpire(key, u.UserListCart)
 }
 
 //计算运费总结

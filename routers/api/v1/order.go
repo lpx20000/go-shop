@@ -6,6 +6,7 @@ import (
 	"shop/pkg/logging"
 	"shop/pkg/util"
 	"shop/services"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,4 +38,11 @@ func GetOrderList(c *gin.Context) {
 	userId = c.GetInt("userId")
 	data = services.GetOrderList(userId, orderType.DataType)
 	util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+}
+
+func GetOrderDetail(c *gin.Context) {
+	orderId := strings.TrimSpace(c.Request.FormValue("order_id"))
+	if len(orderId) {
+
+	}
 }

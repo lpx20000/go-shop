@@ -23,7 +23,7 @@ func (h *Help) GetAppHelp() (err error) {
 		dataByte []byte
 	)
 	key = h.getHelpKey()
-	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+	if dataByte, exist, err = get(key); err != nil {
 		logging.LogError(err)
 		return
 	}
@@ -35,7 +35,7 @@ func (h *Help) GetAppHelp() (err error) {
 		logging.LogError(err)
 		return
 	}
-	if err = setDataWithKey(key, h); err != nil {
+	if err = set(key, h); err != nil {
 		logging.LogError(err)
 	}
 	return

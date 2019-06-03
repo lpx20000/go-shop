@@ -102,6 +102,39 @@ func Get(key string) (reply []byte, err error) {
 	return reply, nil
 }
 
+func Hset(key string, field string, data interface{}) (err error) {
+	var conn redis.Conn
+
+	if setting.RedisSetting.RedisOpen {
+		conn = RedisConn.Get()
+		defer conn.Close()
+
+		if _, err = conn.Do("HSET", key, field, data); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Hget(key string, field string) (reply []byte, err error) {
+	var (
+		conn   redis.Conn
+		result interface{}
+	)
+
+	if setting.RedisSetting.RedisOpen {
+		conn = RedisConn.Get()
+		defer conn.Close()
+		if result, err = conn.Do("HGET", key, field); err != nil {
+			return
+		}
+		if result == nil {
+			return
+		}
+	}
+	return redis.Bytes(reply, nil)
+}
+
 func Delete(key string) (bool, error) {
 	if setting.RedisSetting.RedisOpen {
 		conn := RedisConn.Get()
@@ -110,6 +143,16 @@ func Delete(key string) (bool, error) {
 	}
 	return false, nil
 }
+
+func Hdel(key, field string) (bool, error) {
+	if setting.RedisSetting.RedisOpen {
+		conn := RedisConn.Get()
+		defer conn.Close()
+		return redis.Bool(conn.Do("HDEL", key, field))
+	}
+	return false, nil
+}
+
 func LikeDeletes(key string) error {
 	if setting.RedisSetting.RedisOpen {
 		conn := RedisConn.Get()

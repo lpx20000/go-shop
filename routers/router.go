@@ -31,22 +31,25 @@ func InitRouter() *gin.Engine {
 	apia1.Use(middleware.Auth())
 	{
 		//基本信息
-		apia1.GET("/detail", v1.GetGoodDetail)
-		apia1.GET("/addressList", v1.GetUserAddress)
-		apia1.POST("/addAddress", v1.AddAddress)
-		apia1.GET("/category", v1.GetGoodCategory)
-		apia1.GET("/list", v1.GetGoodList)
-		apia1.GET("/cart", v1.GetCartList)
-		apia1.POST("/AddCart", v1.AddCart)
+		apia1.GET("/goods/detail", v1.GetGoodDetail)
+		apia1.GET("/goods/category", v1.GetGoodCategory)
+		apia1.GET("/goods/list", v1.GetGoodList)
+		apia1.GET("/address/list", v1.GetUserAddress)
+		apia1.POST("/address/add", v1.AddAddress)
+		apia1.GET("/cart/list", v1.GetCartList)
+		apia1.POST("/cart/add", v1.AddCart)
 
 		//待缓存
-		apia1.GET("/userDetail", v1.GetUserDetail)
-		apia1.POST("/setAddress", v1.SetDefaultAddress)
-		apia1.POST("/deleteAddress", v1.DeleteAddress)
-		apia1.GET("/addressDetail", v1.GetAddressDetail)
-		apia1.POST("/editAddress", v1.EditAddress)
-		apia1.GET("/orderAllList", v1.GetOrderList)
-		apia1.GET("/address", v1.GetCartAddress)
+		apia1.POST("/cart/sub", v1.SubCart)
+		apia1.POST("/cart/delete", v1.DeleteCart)
+		apia1.POST("/address/set", v1.SetDefaultAddress)
+		apia1.POST("/address/delete", v1.DeleteAddress)
+		apia1.GET("/address/detail", v1.GetAddressDetail)
+		apia1.POST("/address/edit", v1.EditAddress)
+		apia1.GET("/order/list", v1.GetOrderList)
+		apia1.GET("/order/detail", v1.GetOrderDetail)
+		apia1.GET("/user/detail", v1.GetUserDetail)
+		apia1.GET("/cart/address", v1.GetCartAddress)
 	}
 
 	return r

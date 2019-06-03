@@ -28,7 +28,7 @@ func (a *App) GetIndexData() (err error) {
 		dataByte []byte
 	)
 	key = a.getIndexKey()
-	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+	if dataByte, exist, err = get(key); err != nil {
 		return
 	}
 
@@ -45,6 +45,6 @@ func (a *App) GetIndexData() (err error) {
 	if a.Best, err = models.GetIndexBestGoods(); err != nil {
 		return
 	}
-	err = setDataWithKey(key, a)
+	err = set(key, a)
 	return
 }

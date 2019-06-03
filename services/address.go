@@ -56,7 +56,8 @@ func (a *Address) GetUserAddress(uid int) (err error) {
 		userInfo models.User
 	)
 	key = a.getKey(uid)
-	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+
+	if dataByte, exist, err = get(key); err != nil {
 		logging.LogTrace(err)
 		return
 	}
@@ -77,7 +78,7 @@ func (a *Address) GetUserAddress(uid int) (err error) {
 	}
 
 	a.DefaultId = userInfo.AddressId
-	if err = setDataWithKey(key, a); err != nil {
+	if err = set(key, a); err != nil {
 		logging.LogTrace(err)
 	}
 	return
@@ -118,7 +119,7 @@ func (a *Address) ModifyUserAddress(action string) (err error) {
 	)
 	regionKey = e.CACHA_APP_REGION_ID
 
-	if dataByte, exist, err = getDataFromRedis(regionKey); err != nil {
+	if dataByte, exist, err = get(regionKey); err != nil {
 		logging.LogError(err)
 		return
 	}

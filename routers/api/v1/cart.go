@@ -51,3 +51,41 @@ func AddCart(c *gin.Context) {
 	util.Response(c, util.R{Code: e.SUCCESS, Data: cart})
 	return
 }
+
+func SubCart(c *gin.Context) {
+	var (
+		cart services.UserCartList
+		err  error
+	)
+
+	if err = c.ShouldBindWith(&cart.SubCartList, binding.FormPost); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		return
+	}
+
+	if err = cart.Sub(c.GetInt("userId")); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		return
+	}
+	util.Response(c, util.R{Code: e.SUCCESS, Data: cart})
+	return
+}
+
+func DeleteCart(c *gin.Context) {
+	var (
+		cart services.UserCartList
+		err  error
+	)
+
+	if err = c.ShouldBindWith(&cart.SubCartList, binding.FormPost); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		return
+	}
+
+	if err = cart.Delete(c.GetInt("userId")); err != nil {
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		return
+	}
+	util.Response(c, util.R{Code: e.SUCCESS, Data: cart})
+	return
+}

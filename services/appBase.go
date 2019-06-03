@@ -23,7 +23,7 @@ func (b *AppBase) GetAppBase(appId uint) (err error) {
 		dataByte []byte
 	)
 	key = b.GetBaseKey()
-	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+	if dataByte, exist, err = get(key); err != nil {
 		logging.LogError(err)
 		return
 	}
@@ -35,7 +35,7 @@ func (b *AppBase) GetAppBase(appId uint) (err error) {
 		logging.LogError(err)
 		return
 	}
-	if err = setDataWithKey(key, b); err != nil {
+	if err = set(key, b); err != nil {
 		logging.LogError(err)
 		return
 	}

@@ -23,7 +23,7 @@ func (c *Category) GetCategory() (err error) {
 		exist    bool
 	)
 	key = c.getKey()
-	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+	if dataByte, exist, err = get(key); err != nil {
 		logging.LogTrace(err)
 		return
 	}
@@ -37,7 +37,7 @@ func (c *Category) GetCategory() (err error) {
 		logging.LogTrace(err)
 		return
 	}
-	if err = setDataWithKey(key, c); err != nil {
+	if err = set(key, c); err != nil {
 		logging.LogTrace(err)
 		return
 	}

@@ -31,7 +31,7 @@ func (g *GoodDetail) GetGoodDetail(goodId int) (err error) {
 		exist    bool
 	)
 	key = g.getKey(goodId)
-	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+	if dataByte, exist, err = get(key); err != nil {
 		logging.LogTrace(err)
 		return
 	}
@@ -51,7 +51,7 @@ func (g *GoodDetail) GetGoodDetail(goodId int) (err error) {
 	}
 	g.Detail = good
 	g.SpecData = GetManySpecData(good)
-	if err = setDataWithKey(key, g); err != nil {
+	if err = set(key, g); err != nil {
 		logging.LogTrace(err)
 	}
 	return
@@ -113,7 +113,7 @@ func (g *GoodsList) GetGoodsList(page GoodsListPage) (err error) {
 		dataByte []byte
 	)
 	key = g.GetKey(page)
-	if dataByte, exist, err = getDataFromRedis(key); err != nil {
+	if dataByte, exist, err = get(key); err != nil {
 		logging.LogError(err)
 		return
 	}
@@ -128,7 +128,7 @@ func (g *GoodsList) GetGoodsList(page GoodsListPage) (err error) {
 	if len(g.List.Data) == 0 {
 		return
 	}
-	if err = setDataWithKey(key, g); err != nil {
+	if err = set(key, g); err != nil {
 		logging.LogError(err)
 	}
 	return
