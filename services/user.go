@@ -8,6 +8,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+type User struct {
+	UserId int    `json:"user_id"`
+	Detail Detail `json:"-"`
+}
+
+type Detail struct {
+	UserInfo   models.User    `json:"userInfo"`
+	OrderCount map[string]int `json:"orderCount"`
+}
+
 type UserInfo struct {
 	NickName  string `json:"nickName"`
 	Gender    int    `json:"gender"`
@@ -37,7 +47,7 @@ var (
 	url = "https://api.weixin.qq.com/sns/jscode2session"
 )
 
-func UserLogin(userInfo, code string, wxappId uint) (session string, userId int, err error) {
+func UserLogin(userInfo, code string, wxappId uint) (token string, userId int, err error) {
 	var (
 		appInfo AppInfo
 		openId  string
@@ -48,31 +58,31 @@ func UserLogin(userInfo, code string, wxappId uint) (session string, userId int,
 		err = errors.New("请到 [后台-小程序设置] 填写appid 和 appsecret")
 		return
 	}
-	if session, openId, err = getSessionFromWeiChat(code, appInfo.AppId, appInfo.AppSecret); err != nil {
+	if openId, err = getSessionFromWeiChat(code, appInfo.AppId, appInfo.AppSecret); err != nil {
 		return
 	}
-	userId, err = models.Register(userInfo, wxappId, openId)
+
+	userId = models.GetUserIdByToken(openId)
+	if userId > 0 {
+		token, err = util.GenerateToken(openId, userId)
+	} else {
+		if userId, err = models.Register(userInfo, wxappId, openId); err != nil {
+			return
+		}
+		token, err = util.GenerateToken(openId, userId)
+	}
 	return
 }
 
-func GetUserDetail(uid int) (data map[string]interface{}) {
-	var (
-		userInfo   *models.User
-		orderCount map[string]int
-	)
-	data = make(map[string]interface{})
-	orderCount = make(map[string]int)
-
-	userInfo = models.GetUserInfoByOpenId(uid)
-
-	data["userInfo"] = userInfo
-	orderCount["payment"] = models.GetOrderCount(userInfo.UserId, "payment")
-	orderCount["received"] = models.GetOrderCount(userInfo.UserId, "received")
-	data["orderCount"] = orderCount
+func (u *User) GetUserDetail() (err error) {
+	u.Detail.UserInfo = models.GetUserInfoByOpenId(u.UserId)
+	u.Detail.OrderCount = make(map[string]int, 2)
+	u.Detail.OrderCount["payment"] = models.GetOrderCount(u.UserId, "payment")
+	u.Detail.OrderCount["received"] = models.GetOrderCount(u.UserId, "received")
 	return
 }
 
-func getSessionFromWeiChat(code, appId, appSecret string) (session, openid string, err error) {
+func getSessionFromWeiChat(code, appId, appSecret string) (openid string, err error) {
 	var (
 		result      []byte
 		sessionInfo sessionInfo
@@ -102,7 +112,6 @@ func getSessionFromWeiChat(code, appId, appSecret string) (session, openid strin
 		return
 	}
 
-	session, err = util.GenerateToken(sessionInfo.Openid)
 	openid = sessionInfo.Openid
 	return
 }

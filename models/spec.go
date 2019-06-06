@@ -16,7 +16,7 @@ type SpecAttrResult struct {
 type SpecAttrData struct {
 	GroupId   uint       `json:"group_id"`
 	GroupName string     `json:"group_name"`
-	SpecItem  []SpecItem `json:"spec_item"`
+	SpecItem  []SpecItem `json:"spec_items"`
 }
 
 type SpecItem struct {
@@ -25,7 +25,7 @@ type SpecItem struct {
 }
 
 type SpecListData struct {
-	GoodsSpecId uint   `json:"goods_spec_id"`
+	GoodsSpecId int    `json:"goods_spec_id"`
 	SpecSkuId   string `json:"spec_sku_id"`
 	Rows        []int  `json:"rows"`
 	Form        Form   `json:"form"`
@@ -33,7 +33,7 @@ type SpecListData struct {
 
 type Form struct {
 	GoodsNo     string  `json:"goods_no"`
-	GoodsPrice  float32 `json:"goods_price"`
+	GoodsPrice  float64 `json:"goods_price"`
 	GoodsWeight float64 `json:"goods_weight"`
 	LinePrice   float32 `json:"line_price"`
 	StockNum    int     `json:"stock_num"`

@@ -1,28 +1,34 @@
 package models
 
+import (
+	"strconv"
+	"time"
+
+	"github.com/jinzhu/gorm"
+)
+
 type Order struct {
-	OrderId            uint                   `json:"order_id"`
-	OrderNo            string                 `json:"order_no"`
-	TotalPrice         float32                `json:"total_price"`
-	PayNotice          float32                `json:"pay_notice,omitempty"`
-	PayStatus          uint8                  `json:"-"`
-	PayStatusInfo      map[string]interface{} `json:"pay_status,omitempty"`
-	PayTime            uint                   `json:"pay_time"`
-	ExpressPrice       float32                `json:"express_price"`
-	ExpressCompany     string                 `json:"express_company"`
-	ExpressNo          string                 `json:"express_no"`
-	DeliveryStatus     uint8                  `json:"-"`
-	DeliveryStatusInfo map[string]interface{} `json:"delivery_status,omitempty"`
-	DeliveryTime       uint                   `json:"delivery_time"`
-	ReceiptStatus      uint8                  `json:"-"`
-	ReceiptStatusInfo  map[string]interface{} `json:"receipt_status,omitempty"`
-	ReceiptTime        uint                   `json:"receipt_time"`
-	OrderStatus        uint8                  `json:"-"`
-	OrderStatusInfo    map[string]interface{} `json:"order_status,omitempty"`
-	TransactionId      string                 `json:"transaction_id"`
-	UserId             int                    `json:"user_id"`
-	WxappId            uint                   `json:"-"`
-	OrderGoods         []OrderGoods           `gorm:"foreignkey:OrderId;association_foreignkey:OrderId" json:"goods,omitempty" ` //hasMany
+	OrderId        int         `gorm:"PRIMARY_KEY" json:"order_id"`
+	OrderNo        string      `json:"order_no"`
+	TotalPrice     float64     `json:"total_price"`
+	PayStatus      interface{} `gorm:"default:'10'" json:"pay_status"`
+	PayPrice       float64     `json:"pay_price"`
+	PayTime        uint        `json:"pay_time"`
+	ExpressPrice   float64     `json:"express_price"`
+	ExpressCompany string      `json:"express_company"`
+	ExpressNo      string      `json:"express_no"`
+	DeliveryStatus interface{} `gorm:"default:'10'" json:"delivery_status"`
+	DeliveryTime   uint        `json:"delivery_time"`
+	ReceiptStatus  interface{} `gorm:"default:'10'" json:"receipt_status"`
+	ReceiptTime    uint        `json:"receipt_time"`
+	OrderStatus    interface{} `gorm:"default:'10'"json:"order_status"`
+	TransactionId  string      `json:"transaction_id"`
+	UserId         int         `json:"user_id"`
+	WxappId        string      `json:"-"`
+	Model
+	OrderGoods []OrderGoods `gorm:"foreignkey:order_id;association_foreignkey:order_id" json:"goods,omitempty" ` //hasMany
+	//User               User                   `gorm:"foreignkey:UserId;association_foreignkey:UserId" json:"address,omitempty" ` //belongsTo
+	OrderAddress OrderAddress `gorm:"foreignkey:OrderId;association_foreignkey:OrderId" json:"address,omitempty" `
 }
 
 type CartOrder struct {
@@ -39,55 +45,62 @@ type CartOrder struct {
 }
 
 func (o *Order) AfterFind() error {
-	payStatus := map[uint8]map[string]interface{}{
+	payStatus := map[int64]map[string]interface{}{
 		10: {"text": "待付款", "value": 10},
 		20: {"text": "已付款", "value": 20},
 	}
-	deliveryStatus := map[uint8]map[string]interface{}{
+	deliveryStatus := map[int64]map[string]interface{}{
 		10: {"text": "待发货", "value": 10},
 		20: {"text": "已发货'", "value": 20},
 	}
-	receiptStatus := map[uint8]map[string]interface{}{
+	receiptStatus := map[int64]map[string]interface{}{
 		10: {"text": "待发货", "value": 10},
 		20: {"text": "已发货'", "value": 20},
 	}
-	orderStatus := map[uint8]map[string]interface{}{
+	orderStatus := map[int64]map[string]interface{}{
 		10: {"text": "进行中", "value": 10},
 		20: {"text": "取消'", "value": 20},
 		30: {"text": "已完成'", "value": 30},
 	}
-	o.PayStatusInfo = payStatus[o.PayStatus]
-	o.DeliveryStatusInfo = deliveryStatus[o.DeliveryStatus]
-	o.ReceiptStatusInfo = receiptStatus[o.ReceiptStatus]
-	o.OrderStatusInfo = orderStatus[o.OrderStatus]
+	o.PayStatus = payStatus[o.PayStatus.(int64)]
+	o.DeliveryStatus = deliveryStatus[o.DeliveryStatus.(int64)]
+	o.ReceiptStatus = receiptStatus[o.ReceiptStatus.(int64)]
+	o.OrderStatus = orderStatus[o.OrderStatus.(int64)]
+	o.CreateTime, _ = strconv.ParseInt(time.Unix(o.CreateTime, 0).Format("2006-01-02 15:04:05"), 10, 64)
 	return nil
 }
 
-func GetOrderList(userId int, filter string) (orders []Order) {
+func GetOrderList(userId int, filters map[string]interface{}) ([]*Order, error) {
 	var (
-		filters map[string]interface{}
+		orders []*Order
+		err    error
 	)
-	filters = make(map[string]interface{})
-	switch filter {
-	case "all":
-	case "payment":
-		filters["pay_status"] = 10
-	case "delivery":
-		filters["pay_status"] = 20
-		filters["delivery_status"] = 10
-	case "received":
-		filters["pay_status"] = 20
-		filters["receipt_status"] = 20
-		filters["receipt_status"] = 10
-	}
-
-	Db.Where(&Order{UserId: userId}).
+	err = Db.Where(&Order{UserId: userId}).
 		Where(filters).
 		Preload("OrderGoods").
 		Not("order_status", 20).
 		Order("create_time DESC").
-		Find(&orders)
-	return
+		Find(&orders).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return orders, nil
+}
+
+func GetOrderDetail(userId, orderId int) (*Order, error) {
+	var (
+		order Order
+		err   error
+	)
+	err = Db.Where(&Order{UserId: userId, OrderId: orderId}).
+		Preload("OrderGoods").
+		Preload("OrderAddress").
+		Not("order_status", 20).
+		First(&order).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return &order, nil
 }
 
 func GetOrderCount(userId int, filter string) (count int) {
@@ -106,9 +119,12 @@ func GetOrderCount(userId int, filter string) (count int) {
 	}
 
 	Db.Model(&Order{}).Where(&Order{UserId: userId}).
-		Preload("GoodsImage").
 		Not("order_status", 20).
-		Order("create_time DESC").
 		Where(filters).Count(&count)
 	return
+}
+
+func UpdateOrderByOrderId(orderId int, data map[string]interface{}) error {
+	return Db.Model(&Order{}).Set("gorm:association_autoupdate", false).
+		Where(&Order{OrderId: orderId}).Updates(data).Error
 }

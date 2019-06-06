@@ -12,12 +12,12 @@ import (
 )
 
 type Model struct {
-	CreateTime int `json:"-"`
-	UpdateTime int `json:"-"`
+	CreateTime int64 `json:"-"`
+	UpdateTime int64 `json:"-"`
 }
 
 var (
-	Db *gorm.DB
+	Db   *gorm.DB
 	Host string
 )
 
@@ -38,6 +38,7 @@ func Setup() {
 		return setting.DatabaseSetting.TablePrefix + defaultTableName
 	}
 
+	Db.LogMode(true)
 	Db.SingularTable(true)
 	Db.Callback().Create().Replace("gorm:update_time_stamp", updateTimeStampForCreateCallback)
 	Db.Callback().Update().Replace("gorm:update_time_stamp", updateTimeStampForUpdateCallback)

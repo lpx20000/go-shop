@@ -18,11 +18,9 @@ import (
 // @Success 500 {string} json "{"code":500,"data":{},"msg":"We need ID!"}"
 // @Router /api/v1/list?wxapp_id={id} [get]
 func GetCartList(c *gin.Context) {
-	wxappId := c.GetString("wxappId")
-	uid := c.GetInt("userId")
 	cartList := &services.UserCartList{}
-	if err := cartList.GetCartInfo(wxappId, uid); err != nil {
-		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+	if err := cartList.GetCartInfo(c.GetString("wxappId"), c.GetInt("userId"), false); err != nil {
+		util.Response(c, util.R{Code: e.FAIL, Data: err.Error()})
 	}
 	util.Response(c, util.R{Code: e.SUCCESS, Data: cartList.CartList})
 }
@@ -78,14 +76,23 @@ func DeleteCart(c *gin.Context) {
 	)
 
 	if err = c.ShouldBindWith(&cart.SubCartList, binding.FormPost); err != nil {
-		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		util.Response(c, util.R{Code: e.FAIL, Data: err.Error()})
 		return
 	}
 
 	if err = cart.Delete(c.GetInt("userId")); err != nil {
-		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
+		util.Response(c, util.R{Code: e.FAIL, Data: err.Error()})
 		return
 	}
 	util.Response(c, util.R{Code: e.SUCCESS, Data: cart})
 	return
+}
+
+//购物车结算
+func OrderCart(c *gin.Context) {
+	cartList := &services.UserCartList{}
+	if err := cartList.GetCartInfo(c.GetString("wxappId"), c.GetInt("userId"), true); err != nil {
+		util.Response(c, util.R{Code: e.FAIL, Data: err.Error()})
+	}
+	util.Response(c, util.R{Code: e.SUCCESS, Data: cartList.CartList})
 }

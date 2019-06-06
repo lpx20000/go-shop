@@ -1,6 +1,8 @@
 package util
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 )
@@ -16,4 +18,10 @@ func FormatNumber(s string) (f float64, err error) {
 
 func FormatPreciseNumber(f float64) string {
 	return fmt.Sprintf("%.2f", f)
+}
+
+func Md5V(str string) string {
+	h := md5.New()
+	h.Write([]byte(str))
+	return hex.EncodeToString(h.Sum(nil))
 }

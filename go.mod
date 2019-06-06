@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go v0.38.0 // indirect
 	github.com/Unknwon/com v0.0.0-20190321035513-0fed4efef755
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
+	github.com/chanxuehong/wechat v0.0.0-20190521093015-fafb751f9916
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
 	github.com/gin-gonic/gin v1.3.0

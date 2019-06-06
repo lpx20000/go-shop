@@ -11,15 +11,17 @@ var jwtSecret = []byte(setting.AppSetting.JwtSecret)
 
 type Claims struct {
 	OpenId string `json:"openId"`
+	UserId int    `json:"user_id"`
 	jwt.StandardClaims
 }
 
-func GenerateToken(openId string) (string, error) {
+func GenerateToken(openId string, userId int) (string, error) {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(7 * 24 * time.Hour)
 
 	claims := Claims{
 		openId,
+		userId,
 		jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
 			Issuer:    "gin-blog",

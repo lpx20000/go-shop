@@ -28,6 +28,9 @@ func InitRouter() *gin.Engine {
 	apia1.GET("/app", v1.GetAppBase)
 	apia1.GET("/help", v1.GetAppHelp)
 	apia1.GET("/index", v1.GetAppInfo)
+
+	//支付回调
+	apia1.GET("/WxPayNotify", v1.PayNotice)
 	apia1.Use(middleware.Auth())
 	{
 		//基本信息
@@ -42,12 +45,18 @@ func InitRouter() *gin.Engine {
 		//待缓存
 		apia1.POST("/cart/sub", v1.SubCart)
 		apia1.POST("/cart/delete", v1.DeleteCart)
+		apia1.GET("/order/cart", v1.OrderCart)
 		apia1.POST("/address/set", v1.SetDefaultAddress)
 		apia1.POST("/address/delete", v1.DeleteAddress)
 		apia1.GET("/address/detail", v1.GetAddressDetail)
 		apia1.POST("/address/edit", v1.EditAddress)
 		apia1.GET("/order/list", v1.GetOrderList)
 		apia1.GET("/order/detail", v1.GetOrderDetail)
+		apia1.POST("/order/cancel", v1.CancelOrder)
+		apia1.POST("/order/receipt", v1.ReceiptOrder)
+		apia1.POST("/order/doBuy", v1.OrderDoNow)
+		apia1.POST("/order/cartBuy", v1.OrderCartBuy)
+		apia1.GET("/order/buyNow", v1.OrderBuyNow)
 		apia1.GET("/user/detail", v1.GetUserDetail)
 		apia1.GET("/cart/address", v1.GetCartAddress)
 	}

@@ -13,12 +13,12 @@ const (
 )
 
 type Goods struct {
-	GoodsId          int                    `gorm:"AUTO_INCREMENT,primary_key" json:"goods_id"`
+	GoodsId          int                    `gorm:"AUTO_INCREMENT,PRIMARY_KEY" json:"goods_id"`
 	GoodsName        string                 `json:"goods_name"`
 	CategoryId       uint                   `json:"category_id"`
 	GoodsSales       uint                   `json:"goods_sales"`
-	SpecType         uint                   `json:"spec_type"`
-	DeductStockType  uint                   `json:"deduct_stock_type"`
+	SpecType         int                    `json:"spec_type"`
+	DeductStockType  int                    `json:"deduct_stock_type"`
 	Content          string                 `json:"content"`
 	SalesInitial     uint                   `json:"-"`
 	SalesActual      uint                   `json:"-"`
@@ -28,21 +28,21 @@ type Goods struct {
 	GoodsStatusArray map[string]interface{} `json:"goods_status"`
 	IsDelete         uint8                  `json:"-"`
 	WxappId          uint                   `json:"-"`
-	GoodsSkuId       string                 `json:"goods_sku_id,omitempty"`
-	GoodsPrice       float64                `json:"goods_price,omitempty"`
-	TotalNum         int                    `json:"total_num,omitempty"`
-	TotalPrice       float64                `json:"total_price,omitempty"`
-	GoodsTotalWeight float64                `json:"goods_total_weight,omitempty"`
-	ExpressPrice     float64                `json:"express_price,omitempty"`
-	GoodsSku         GoodsSpec              `json:"goods_sku,omitempty"`
-	GoodsMinPrice    string                 `json:"goods_min_price,omitempty"`
-	GoodsMaxPrice    string                 `json:"goods_max_price,omitempty"`
-	Category         Category               `gorm:"foreignkey:CategoryId;association_foreignkey:CategoryId" json:"category,omitempty" ` //belongsTo
-	GoodsSpec        []GoodsSpec            `gorm:"foreignkey:GoodsId;association_foreignkey:GoodsId" json:"spec,omitempty" `           //hasMany
-	GoodsImage       []GoodsImage           `gorm:"foreignkey:GoodsId;association_foreignkey:GoodsId" json:"image,omitempty" `          //hasMany
-	GoodsSpecRel     []GoodsSpecRel         `gorm:"foreignkey:GoodsId;association_foreignkey:GoodsId" json:"-" `                        //belongsToMany
-	Delivery         Delivery               `gorm:"foreignkey:DeliveryId;association_foreignkey:DeliveryId" json:"delivery,omitempty" ` //belongsTo
-	SpecRel          []*SpecRel             `json:"spec_rel,omitempty"`
+	//GoodsSkuId       string                 `json:"goods_sku_id,omitempty"`
+	GoodsPrice       float64        `json:"goods_price,omitempty"`
+	TotalNum         int            `json:"total_num,omitempty"`
+	TotalPrice       float64        `json:"total_price,omitempty"`
+	GoodsTotalWeight float64        `json:"goods_total_weight,omitempty"`
+	ExpressPrice     float64        `json:"express_price,omitempty"`
+	GoodsSku         GoodsSpec      `json:"goods_sku,omitempty"`
+	GoodsMinPrice    string         `json:"goods_min_price,omitempty"`
+	GoodsMaxPrice    string         `json:"goods_max_price,omitempty"`
+	Category         Category       `gorm:"foreignkey:CategoryId;association_foreignkey:CategoryId" json:"category,omitempty" ` //belongsTo
+	GoodsSpec        []GoodsSpec    `gorm:"foreignkey:GoodsId;association_foreignkey:GoodsId" json:"spec,omitempty" `           //hasMany
+	GoodsImage       []GoodsImage   `gorm:"foreignkey:GoodsId;association_foreignkey:GoodsId" json:"image,omitempty" `          //hasMany
+	GoodsSpecRel     []GoodsSpecRel `gorm:"foreignkey:GoodsId;association_foreignkey:GoodsId" json:"-" `                        //belongsToMany
+	Delivery         Delivery       `gorm:"foreignkey:DeliveryId;association_foreignkey:DeliveryId" json:"delivery,omitempty" ` //belongsTo
+	SpecRel          []SpecRel      `json:"spec_rel,omitempty"`
 }
 
 func (g *Goods) AfterFind() error {
@@ -70,11 +70,7 @@ func GetGoodsInfoForCartList(goodsId []int) (goods []Goods) {
 	return
 }
 
-func GetGoodDetail(goodId int) (*Goods, error) {
-	var (
-		goods Goods
-		err   error
-	)
+func GetGoodDetail(goodId int) (good Goods, err error) {
 	err = Db.Where(map[string]interface{}{
 		"is_delete": 0, "goods_status": ON_SALES,
 		"goods_id": goodId,
@@ -86,11 +82,11 @@ func GetGoodDetail(goodId int) (*Goods, error) {
 		Preload("GoodsSpecRel").
 		Order("goods_id DESC").
 		Order("goods_sort ASC").
-		First(&goods).Error
+		First(&good).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, err
+		return
 	}
-	return &goods, nil
+	return
 }
 
 func GetIndexBestGoods() ([]*Goods, error) {

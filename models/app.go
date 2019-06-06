@@ -3,7 +3,7 @@ package models
 import "github.com/jinzhu/gorm"
 
 type Wxapp struct {
-	WxappId        uint        `gorm:"primary_key" json:"_"`
+	WxappId        int         `gorm:"primary_key" json:"_"`
 	AppName        string      `json:"_"`
 	AppId          string      `json:"_"`
 	AppSecret      string      `json:"_"`
@@ -38,7 +38,7 @@ func (app *Wxapp) AfterFind() error {
 	return nil
 }
 
-func GetAppBase(appId uint) (*Wxapp, error) {
+func GetAppBase(appId int) (*Wxapp, error) {
 	var (
 		app Wxapp
 		err error
@@ -51,4 +51,15 @@ func GetAppBase(appId uint) (*Wxapp, error) {
 		return nil, err
 	}
 	return &app, nil
+}
+
+func GetAppPayInfo(wxappId string) (wxapp Wxapp, err error) {
+	err = Db.Select("app_id, app_secret, mchid, apikey").
+		Where(map[string]interface{}{"wxapp_id": wxappId}).
+		Preload("Navbar").
+		First(&wxapp).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return
+	}
+	return
 }

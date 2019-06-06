@@ -15,7 +15,7 @@ import (
 )
 
 type GoodDetail struct {
-	Detail   *models.Goods          `json:"detail"`
+	Detail   models.Goods           `json:"detail"`
 	SpecData *models.SpecAttrResult `json:"specData"`
 }
 
@@ -25,7 +25,7 @@ func (g *GoodDetail) getKey(goodId int) string {
 
 func (g *GoodDetail) GetGoodDetail(goodId int) (err error) {
 	var (
-		good     *models.Goods
+		good     models.Goods
 		dataByte []byte
 		key      string
 		exist    bool
@@ -57,7 +57,7 @@ func (g *GoodDetail) GetGoodDetail(goodId int) (err error) {
 	return
 }
 
-func GetGoodsSpecRel(goodId int) (specRelAll []*models.SpecRel, err error) {
+func GetGoodsSpecRel(goodId int) (specRelAll []models.SpecRel, err error) {
 	var (
 		goodsSpecRel []*models.GoodsSpecRel
 	)
@@ -67,7 +67,7 @@ func GetGoodsSpecRel(goodId int) (specRelAll []*models.SpecRel, err error) {
 	}
 
 	for _, v := range goodsSpecRel {
-		spec := &models.SpecRel{}
+		spec := models.SpecRel{}
 		spec.SpecValue = v.SpecValue
 		spec.Spec = v.Spec
 		spec.Pivot.Id = v.Id
@@ -189,7 +189,7 @@ func (g *GoodsList) GetGoodsPageList(page GoodsListPage) (err error) {
 	return
 }
 
-func GetManySpecData(g *models.Goods) (specAttrResult *models.SpecAttrResult) {
+func GetManySpecData(g models.Goods) (specAttrResult *models.SpecAttrResult) {
 	if g.SpecType == models.SINGLE_SPEC || len(g.SpecRel) == 0 || len(g.GoodsSpec) == 0 {
 		return
 	}

@@ -16,7 +16,7 @@ func (b *AppBase) GetBaseKey() string {
 	return e.CACHA_APP_BASE
 }
 
-func (b *AppBase) GetAppBase(appId uint) (err error) {
+func (b *AppBase) GetAppBase(appId int) (err error) {
 	var (
 		key      string
 		exist    bool

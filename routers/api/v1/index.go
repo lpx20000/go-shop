@@ -10,7 +10,7 @@ import (
 )
 
 type AppRequest struct {
-	WxappID uint `form:"wxapp_id" binding:"required"`
+	WxappID int `form:"wxapp_id" binding:"required"`
 }
 
 // @Summary 获取小程序首页信息

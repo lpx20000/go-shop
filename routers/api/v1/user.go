@@ -52,11 +52,14 @@ func UserLogin(c *gin.Context) {
 
 func GetUserDetail(c *gin.Context) {
 	var (
-		data map[string]interface{}
-		uid  int
+		user *services.User
+		err  error
 	)
-	uid = c.GetInt("userId")
-	data = services.GetUserDetail(uid)
+	user = &services.User{}
+	user.UserId = c.GetInt("userId")
+	if err = user.GetUserDetail(); err != nil {
+		util.Response(c, util.R{Code: e.FAIL, Data: err.Error()})
+	}
 
-	util.Response(c, util.R{Code: e.SUCCESS, Data: data})
+	util.Response(c, util.R{Code: e.SUCCESS, Data: user.Detail})
 }

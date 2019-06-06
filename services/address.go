@@ -85,7 +85,7 @@ func (a *Address) GetUserAddress(uid int) (err error) {
 }
 
 func (a *Address) SetDefaultAddress() (err error) {
-	err = models.UpdateDefaultAddressId(a.UserId, a.AddressId)
+	err = models.UpdateUserInfo(a.UserId, map[string]interface{}{"address_id": a.AddressId})
 	return
 }
 

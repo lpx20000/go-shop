@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"shop/models"
 	"shop/pkg/e"
 	"shop/pkg/util"
 	"strings"
@@ -30,17 +29,16 @@ func Auth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		session, err := util.ParseToken(token)
+		claims, err := util.ParseToken(token)
 		if err != nil {
 			util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 			c.Abort()
 			return
 		}
-		var userId int
-		userId = models.GetUserIdByToken(session.OpenId)
-		c.Set(token, session.OpenId)
-		c.Set("token", session.OpenId)
-		c.Set("userId", userId)
+
+		c.Set(token, claims.OpenId)
+		c.Set("token", claims.OpenId)
+		c.Set("userId", claims.UserId)
 		c.Set("wxappId", wxappId)
 		c.Next()
 	}

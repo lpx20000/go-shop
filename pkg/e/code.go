@@ -4,6 +4,7 @@ const (
 	SUCCESS                 = 1
 	ERROR                   = -1
 	FAIL                    = 0
+	PAYFAIL                 = -10
 	ERROR_NOT_EXIST_PARAM   = 2
 	ERROR_EXIST_TAG         = 10001
 	ERROR_NOT_EXIST_IFNO    = 10004

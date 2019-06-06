@@ -18,6 +18,7 @@ type ErrorInfo struct {
 }
 
 type UserCartList struct {
+	UserId       int                    `json:"-"`
 	CartList     models.CartOrder       `json:"-"`
 	Err          ErrorInfo              `json:"-"`
 	AddGoodCart  AddCartList            `json:"-"`
@@ -39,32 +40,32 @@ type AddCartList struct {
 	CreateTime int64  `json:"create_time"`
 }
 
-func (u *UserCartList) setErrorInfo(err string) {
-	u.Err.exists = true
-	u.Err.err = err
+func (e *ErrorInfo) SetErrorInfo(err string) {
+	e.exists = true
+	e.err = err
 }
 
-func (u *UserCartList) getErrorInfo() (err string) {
-	err = u.Err.err
-	u.Err.exists = false
-	u.Err.err = ""
+func (e *ErrorInfo) GetErrorInfo() (err string) {
+	err = e.err
+	e.exists = false
+	e.err = ""
 	return
 }
 
-func (u *UserCartList) hasError() bool {
-	return u.Err.exists
+func (e *ErrorInfo) HasError() bool {
+	return e.exists
 }
 
 func (u *UserCartList) getKey(uid int) string {
 	return e.CACHA_APP_CARTLIST + ":" + strconv.Itoa(uid)
 }
 
-func (u *UserCartList) GetCartInfo(wxappId string, uid int) (err error) {
+func (u *UserCartList) GetCartInfo(wxappId string, uid int, isAddress bool) (err error) {
 	var (
 		carts           map[string]AddCartList
 		goodsId         []int
 		goodsInfo       map[int]models.Goods
-		userInformation *models.User
+		userInformation models.User
 		cityId          int
 		existAddress    bool
 		cartList        []models.Goods
@@ -90,37 +91,40 @@ func (u *UserCartList) GetCartInfo(wxappId string, uid int) (err error) {
 		goodsId = append(goodsId, item.GoodId)
 	}
 
-	userInformation = models.GetUserInfoByOpenId(uid)
 	goodsInfo = getCartListByIds(goodsId)
 
-	cityId = userInformation.AddressDefault.CityId
-	existAddress = !(len(userInformation.UserAddress) == 0)
+	if isAddress {
+		userInformation = models.GetUserInfoByOpenId(uid)
+		cityId = userInformation.AddressDefault.CityId
+		existAddress = !(len(userInformation.UserAddress) == 0)
+	}
+
 	inRegion = true
 
 	if len(carts) > 0 {
-		for index, cart := range carts {
+		for _, cart := range carts {
 			if goodsInfo[cart.GoodId].GoodsId == 0 {
-				delete(carts, index)
-				_ = u.deleteSpecifyKey(key, index)
+				//delete(carts, index)
+				//_ = u.deleteSpecifyKey(key, index)
 				continue
 			}
 			good = goodsInfo[cart.GoodId]
-			good.GoodsSkuId = cart.GoodsSkuId
+			//good.GoodsSkuId = cart.GoodsSkuId
 			goodSku = GetGoodsSku(cart.GoodsSkuId, good)
 			if goodSku.GoodsId == 0 {
-				delete(carts, index)
-				_ = u.deleteSpecifyKey(key, index)
+				//delete(carts, index)
+				//_ = u.deleteSpecifyKey(key, index)
 				continue
 			}
 			good.GoodsSku = goodSku
 			if good.GoodsStatusArray["value"] != 10 {
-				u.setErrorInfo(fmt.Sprintf("很抱歉，商品 [%s] 已下架", good.GoodsName))
+				u.Err.SetErrorInfo(fmt.Sprintf("很抱歉，商品 [%s] 已下架", good.GoodsName))
 			}
 
 			if cart.GoodsNum > goodSku.StockNum {
-				u.setErrorInfo(fmt.Sprintf("很抱歉，商品 [%s] 库存不足", good.GoodsName))
+				u.Err.SetErrorInfo(fmt.Sprintf("很抱歉，商品 [%s] 库存不足", good.GoodsName))
 			}
-			good.GoodsPrice = float64(goodSku.GoodsPrice)
+			good.GoodsPrice = goodSku.GoodsPrice
 			good.TotalNum = cart.GoodsNum
 			good.TotalPrice = util.Multiplication(good.GoodsPrice * float64(cart.GoodsNum))
 			good.GoodsTotalWeight = util.Multiplication(good.GoodsSku.GoodsWeight * float64(cart.GoodsNum))
@@ -129,7 +133,7 @@ func (u *UserCartList) GetCartInfo(wxappId string, uid int) (err error) {
 				good.ExpressPrice = good.Delivery.GetTotalFee(cityId, cart.GoodsNum, good.GoodsTotalWeight)
 			} else {
 				if existAddress {
-					u.setErrorInfo(fmt.Sprintf("很抱歉，您的收货地址不在商品 [%s] 的配送范围内", good.GoodsName))
+					u.Err.SetErrorInfo(fmt.Sprintf("很抱歉，您的收货地址不在商品 [%s] 的配送范围内", good.GoodsName))
 				}
 			}
 			cartList = append(cartList, good)
@@ -147,8 +151,8 @@ func (u *UserCartList) GetCartInfo(wxappId string, uid int) (err error) {
 		ExistAddress:    existAddress,
 		ExpressPrice:    expressPrice,
 		IntraRegion:     inRegion,
-		HasError:        u.hasError(),
-		ErrorMsg:        u.getErrorInfo(),
+		HasError:        u.Err.HasError(),
+		ErrorMsg:        u.Err.GetErrorInfo(),
 	}
 	return
 }
@@ -216,6 +220,12 @@ func (u *UserCartList) Sub(uid int) (err error) {
 
 func (u *UserCartList) Delete(uid int) error {
 	return u.deleteSpecifyKey(u.getKey(uid), fmt.Sprintf("%d_%s", u.SubCartList.GoodId, u.SubCartList.GoodsSkuId))
+}
+
+//清空购物车
+func (u *UserCartList) DeleteCartCache() {
+	_, _ = deleteCache(u.getKey(u.UserId))
+	return
 }
 
 func (u *UserCartList) getCacheData(key string) error {
@@ -332,7 +342,7 @@ func GetGoodsSku(goodSkuId string, g models.Goods) (goodSkuInfo models.GoodsSpec
 	}
 	if g.SpecType == 20 {
 		attrs := strings.Split(goodSkuInfo.SpecSkuId, "_")
-		specRel := make(map[string]*models.SpecRel)
+		specRel := make(map[string]models.SpecRel)
 		goodsSpecRel, _ := GetGoodsSpecRel(g.GoodsId)
 		g.SpecRel = goodsSpecRel
 		for _, item := range goodsSpecRel {

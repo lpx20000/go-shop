@@ -8,7 +8,7 @@ import (
 )
 
 type User struct {
-	UserId         int    `gorm:"AUTO_INCREMENT" json:"user_id"`
+	UserId         int    `gorm:"AUTO_INCREMENT,PRIMARY_KEY" json:"user_id"`
 	OpenId         string `json:"-"`
 	NickName       string `gorm:"column:nickName"`
 	AvatarUrl      string `gorm:"column:avatarUrl"`
@@ -34,13 +34,13 @@ type RegisterUser struct {
 	AvatarUrl string `json:"avatarUrl"`
 }
 
-func GetUserInfoByOpenId(uid int) *User {
+func GetUserInfoByOpenId(uid int) User {
 	var userInfo User
 	Db.Where(&User{UserId: uid}).
 		Preload("UserAddress").
 		Preload("AddressDefault").
 		First(&userInfo)
-	return &userInfo
+	return userInfo
 }
 
 func Register(userInfo string, wxappId uint, openId string) (userId int, err error) {
@@ -92,9 +92,9 @@ func (u *User) AfterFind() (err error) {
 	return nil
 }
 
-func GetUserIdByToken(token string) (uid int) {
+func GetUserIdByToken(openId string) (uid int) {
 	var user User
-	Db.Where(&User{OpenId: token}).Select("user_id").First(&user)
+	Db.Where(&User{OpenId: openId}).Select("user_id").First(&user)
 	uid = user.UserId
 	return
 }
@@ -107,7 +107,7 @@ func GetUserInfoByUid(uid int) (userInfo User, err error) {
 	return
 }
 
-func UpdateDefaultAddressId(uid, addressId int) (err error) {
-	err = Db.Model(&User{}).Where(&User{UserId: uid}).Update("address_id", addressId).Error
+func UpdateUserInfo(uid int, updates map[string]interface{}) (err error) {
+	err = Db.Model(&User{}).Where(&User{UserId: uid}).Updates(updates).Error
 	return
 }
