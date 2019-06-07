@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"time"
+
 	"shop/models"
 	"shop/pkg/logging"
 	"shop/pkg/util"
-	"time"
 
 	"github.com/jinzhu/gorm"
 
@@ -59,23 +60,23 @@ type OrderDetail struct {
 }
 
 func (o *Order) GetOrderList(filter string) (err error) {
-	var (
-		filters map[string]interface{}
-	)
-	filters = make(map[string]interface{})
-	switch filter {
-	case "all":
-	case "payment":
-		filters["pay_status"] = 10
-	case "delivery":
-		filters["pay_status"] = 20
-		filters["delivery_status"] = 10
-	case "received":
-		filters["pay_status"] = 20
-		filters["receipt_status"] = 20
-		filters["receipt_status"] = 10
+
+	filters := make(map[string]map[string]interface{}, 3)
+
+	filters["all"] = make(map[string]interface{})
+	filters["payment"] = map[string]interface{}{
+		"pay_status": 10,
 	}
-	if o.OrderList.List, err = models.GetOrderList(o.UserId, filters); err != nil {
+	filters["delivery"] = map[string]interface{}{
+		"pay_status":      20,
+		"delivery_status": 10,
+	}
+	filters["received"] = map[string]interface{}{
+		"pay_status":      20,
+		"delivery_status": 20,
+		"receipt_status":  10,
+	}
+	if o.OrderList.List, err = models.GetOrderList(o.UserId, filters[filter]); err != nil {
 		logging.LogTrace(err)
 		return
 	}
@@ -157,7 +158,6 @@ func (o *Order) DoBuyToCart() (err error) {
 			return
 		}
 		logging.LogTrace(err)
-		return
 	}
 	return
 }

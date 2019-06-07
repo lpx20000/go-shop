@@ -1,6 +1,8 @@
 package services
 
-import "shop/models"
+import (
+	"shop/models"
+)
 
 type WeChatPay struct {
 	Mchid     string `json:"-"`
@@ -9,9 +11,9 @@ type WeChatPay struct {
 	ApiKey    string `json:"-"`
 }
 
-func (w *WeChatPay) GetWxPayConfig(WxappId string) (err error) {
+func (w *WeChatPay) GetWxPayConfig(appId string) (err error) {
 	var appInfo models.Wxapp
-	if appInfo, err = models.GetAppPayInfo(WxappId); err != nil {
+	if appInfo, err = models.GetAppPayInfo(appId); err != nil {
 		return
 	}
 	w.AppId = appInfo.AppId
@@ -21,6 +23,17 @@ func (w *WeChatPay) GetWxPayConfig(WxappId string) (err error) {
 	return
 }
 
-func (w *WeChatPay) WxPayNotify() (err error) {
-	return nil
-}
+//func (w *WeChatPay) WxPayNotify() (err error) {
+//	//appId, mchId, apiKey string, handler Handler, errorHandler ErrorHandler
+//	mch := core.NewServer(w.AppId, w.Mchid, w.ApiKey, core.HandlerFunc(wxHandler),
+//		core.ErrorHandlerFunc(wxErrorHandler))
+//	return nil
+//}
+//
+//func wxHandler(c *core.Context) {
+//	log.Println(c)
+//}
+//
+//func wxErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
+//	fmt.Println("abc")
+//}
