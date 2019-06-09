@@ -20,7 +20,7 @@ import (
 func GetCartList(c *gin.Context) {
 	cartList := &services.UserCartList{}
 	if err := cartList.GetCartInfo(c.GetString("wxappId"), c.GetInt("userId"), false); err != nil {
-		util.Response(c, util.R{Code: e.FAIL, Data: err.Error()})
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 	}
 	util.Response(c, util.R{Code: e.SUCCESS, Data: cartList.CartList})
 }

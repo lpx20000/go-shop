@@ -58,7 +58,7 @@ func GetUserDetail(c *gin.Context) {
 	user = &services.User{}
 	user.UserId = c.GetInt("userId")
 	if err = user.GetUserDetail(); err != nil {
-		util.Response(c, util.R{Code: e.FAIL, Data: err.Error()})
+		util.Response(c, util.R{Code: e.ERROR, Data: err.Error()})
 	}
 
 	util.Response(c, util.R{Code: e.SUCCESS, Data: user.Detail})

@@ -180,6 +180,6 @@ func OrderBuyNow(c *gin.Context) {
 	util.Response(c, util.R{Code: e.SUCCESS, Data: order.OrderBuy.CartOrder})
 }
 
-func PayNotice(c *gin.Context) {
-
-}
+//func PayNotice(c *gin.Context) {
+//
+//}

@@ -30,7 +30,7 @@ func InitRouter() *gin.Engine {
 	apia1.GET("/index", v1.GetAppInfo)
 
 	//支付回调
-	apia1.GET("/WxPayNotify", v1.PayNotice)
+	//apia1.GET("/WxPayNotify", v1.PayNotice)
 	apia1.Use(middleware.Auth())
 	{
 		//基本信息

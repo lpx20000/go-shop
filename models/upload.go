@@ -22,7 +22,7 @@ func (upload *UploadFile) AfterFind() error {
 	if upload.Storage == "local" {
 		upload.FilePath = fmt.Sprintf("%s/%suploads/%s", Host, upload.FileUrl, upload.FileName)
 	} else {
-		upload.FilePath = fmt.Sprintf("%suploads/%s", upload.FileUrl, upload.FileName)
+		upload.FilePath = fmt.Sprintf("%s/%s", upload.FileUrl, upload.FileName)
 	}
 	return nil
 }
