@@ -7,7 +7,6 @@ import (
 	"shop/models"
 	"shop/pkg/e"
 	"shop/pkg/logging"
-	"shop/pkg/setting"
 	"strconv"
 	"strings"
 
@@ -98,6 +97,7 @@ type GoodsListPage struct {
 	SortPrice  int    `json:"sort_type"`
 	Search     string `json:"search"`
 	SortType   string `json:"sort_type"`
+	PageSize   int    `json:"page_size"`
 }
 
 func (g *GoodsList) GetKey(page GoodsListPage) string {
@@ -140,16 +140,21 @@ func (g *GoodsList) GetGoodsPageList(page GoodsListPage) (err error) {
 		total int
 	)
 
-	query := models.Db.Model(&models.Goods{}).Select(`yoshop_goods.*, (sales_initial + sales_actual) as goods_sales,MIN(goods_price) AS goods_min_price,
-	MAX(goods_price) AS goods_max_price`).
+	minSubQuery := models.Db.Model(&models.GoodsSpec{}).
+		Select("Min(goods_price)").
+		Where(map[string]interface{}{"wxapp_id": 10001, "goods_id": "yoshop_goods.goods_id"}).
+		SubQuery()
+
+	maxSubQuery := models.Db.Model(&models.GoodsSpec{}).
+		Select("Max(goods_price)").
+		Where(map[string]interface{}{"wxapp_id": 10001, "goods_id": "yoshop_goods.goods_id"}).
+		SubQuery()
+
+	query := models.Db.Model(&models.Goods{}).Select(`yoshop_goods.*, (sales_initial + sales_actual) as goods_sales,? AS goods_min_price,? AS goods_max_price`, minSubQuery, maxSubQuery).
 		Where(map[string]interface{}{
 			"is_delete": 0, "goods_status": models.ON_SALES,
 			"category_id": page.CategoryId,
-		}).
-		Preload("Category").
-		Preload("GoodsSpec").
-		Preload("GoodsImage").
-		Joins(`left join yoshop_goods_spec  on yoshop_goods.goods_id = yoshop_goods_spec.goods_id`)
+		})
 
 	if len(strings.Trim(page.Search, "")) > 0 {
 		query = query.Where("goods_name LIKE ?", "%"+page.Search+"%")
@@ -173,8 +178,12 @@ func (g *GoodsList) GetGoodsPageList(page GoodsListPage) (err error) {
 
 	query.Count(&total)
 
-	err = query.Offset(setting.AppSetting.PageSize * (page.Page - 1)).
-		Limit(setting.AppSetting.PageSize).
+	err = query.
+		Preload("Category").
+		Preload("GoodsSpec").
+		Preload("GoodsImage").
+		Offset(page.Page).
+		Limit(page.PageSize).
 		Find(&goods).Error
 
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -183,7 +192,7 @@ func (g *GoodsList) GetGoodsPageList(page GoodsListPage) (err error) {
 
 	g.List.Data = goods
 	g.List.CurrentPage = page.Page
-	g.List.PerPage = setting.AppSetting.PageSize
+	g.List.PerPage = page.PageSize
 	g.List.Total = total
 	g.List.LastPage = math.Ceil(float64(total) / float64(models.PER_PAGE))
 	return

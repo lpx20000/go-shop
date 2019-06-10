@@ -15,7 +15,7 @@ const (
 type Goods struct {
 	GoodsId          int                    `gorm:"AUTO_INCREMENT,PRIMARY_KEY" json:"goods_id"`
 	GoodsName        string                 `json:"goods_name"`
-	CategoryId       uint                   `json:"category_id"`
+	CategoryId       int                    `json:"category_id"`
 	GoodsSales       uint                   `json:"goods_sales"`
 	SpecType         int                    `json:"spec_type"`
 	DeductStockType  int                    `json:"deduct_stock_type"`

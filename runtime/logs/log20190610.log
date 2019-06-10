@@ -1,0 +1,2 @@
+{"level":"error","msg":"[Error 1054: Unknown column 'goods_min_price' in 'order clause']","time":"2019-06-10T11:40:28+08:00"}
+{"level":"error","msg":"[Error 1054: Unknown column 'goods_min_price' in 'order clause']","time":"2019-06-10T11:40:41+08:00"}

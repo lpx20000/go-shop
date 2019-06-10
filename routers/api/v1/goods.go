@@ -3,6 +3,7 @@ package v1
 import (
 	"shop/models"
 	"shop/pkg/e"
+	"shop/pkg/setting"
 	"shop/pkg/util"
 	"shop/services"
 
@@ -68,21 +69,14 @@ func GetGoodList(c *gin.Context) {
 		return
 	}
 
-	if list.Page == 0 {
-		list.Page = 1
-	}
-
 	models.Host = c.Request.Host
 	pageInfo = services.GoodsListPage{
-		Page:       list.Page,
+		Page:       util.GetPage(c),
 		CategoryId: list.CategoryId,
 		SortPrice:  list.SortPrice,
 		Search:     list.Search,
 		SortType:   list.SortType,
-	}
-
-	if pageInfo.Page > 1 {
-		pageInfo.Page = list.Page
+		PageSize:   setting.AppSetting.PageSize,
 	}
 
 	h := &services.GoodsList{}
