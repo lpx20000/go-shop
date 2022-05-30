@@ -16,6 +16,7 @@ import (
 func init() {
 	logging.Setup()
 	setting.Setup()
+	
 	gredis.SetUp()
 	models.Setup()
 }
